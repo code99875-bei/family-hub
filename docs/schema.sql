@@ -132,9 +132,11 @@ CREATE TABLE IF NOT EXISTS personal_installment_payments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- personal_transactions 新增帳戶轉移欄位
+-- personal_transactions 新增帳戶轉移 + 信用卡已繳欄位
 ALTER TABLE personal_transactions
   ADD COLUMN IF NOT EXISTS transfer_group_id UUID;
+ALTER TABLE personal_transactions
+  ADD COLUMN IF NOT EXISTS is_paid BOOLEAN DEFAULT FALSE;
 
 -- 10. 固定支出設定（每月固定繳款，如信用卡帳單）
 CREATE TABLE IF NOT EXISTS personal_recurring_expenses (

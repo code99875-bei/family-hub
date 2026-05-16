@@ -6,6 +6,7 @@
   <title>Family Hub — 個人財務</title>
   <link rel="stylesheet" href="src/css/main.css">
   <style>
+    /* 帳戶卡片 */
     .account-card {
       background: var(--card);
       border-radius: var(--radius);
@@ -19,244 +20,202 @@
     .account-icon {
       width: 44px; height: 44px;
       border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
     }
     .account-info { flex: 1; min-width: 0; }
     .account-name-row {
-      font-size: 0.9rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      font-size: 0.9rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.3rem;
     }
     .account-type-chip {
-      font-size: 0.65rem;
-      padding: 1px 6px;
-      border-radius: 8px;
-      background: #F0EDE8;
-      color: var(--text-light);
+      font-size: 0.65rem; padding: 1px 6px; border-radius: 8px;
+      background: #F0EDE8; color: var(--text-light);
     }
-    .account-balance {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-top: 2px;
-    }
+    .account-balance { font-size: 1.3rem; font-weight: 700; margin-top: 2px; }
     .emergency-badge {
-      font-size: 0.65rem;
-      padding: 1px 6px;
-      border-radius: 8px;
-      background: #FF6B6B20;
-      color: var(--danger);
-      border: 1px solid #FF6B6B40;
+      font-size: 0.65rem; padding: 1px 6px; border-radius: 8px;
+      background: #FF6B6B20; color: var(--danger); border: 1px solid #FF6B6B40;
     }
+    .accounts-grid { display: flex; flex-direction: column; gap: 0.7rem; }
 
-    .accounts-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-    }
-
+    /* 總計列 */
     .total-bar {
       background: linear-gradient(135deg, #5BB8E8, #7B5EA7);
-      border-radius: var(--radius);
-      padding: 1rem 1.2rem;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      color: white; display: flex; align-items: center; justify-content: space-between;
     }
     .total-bar label { font-size: 0.8rem; opacity: 0.85; }
     .total-bar .val { font-size: 1.6rem; font-weight: 700; }
 
+    /* 財務快照 */
+    .snapshot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+    }
+    .snapshot-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.3rem 0; font-size: 0.85rem;
+    }
+    .snapshot-row label { color: var(--text-light); }
+    .snapshot-row .val { font-weight: 600; }
+    .snapshot-divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0; }
+    .snapshot-net {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.4rem 0; font-size: 0.95rem;
+    }
+    .snapshot-net label { font-weight: 700; }
+    .snapshot-net .val { font-size: 1.1rem; font-weight: 700; }
+    .snapshot-detail {
+      font-size: 0.72rem; color: var(--text-light);
+      margin-top: 0.2rem; padding-left: 0.5rem;
+    }
+    .snapshot-toggle {
+      font-size: 0.75rem; color: var(--primary, #5BB8E8);
+      cursor: pointer; text-decoration: underline;
+      background: none; border: none; padding: 0;
+    }
+
+    /* 收支明細 */
     .txn-row {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.65rem 0;
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.65rem 0; border-bottom: 1px solid var(--border);
     }
     .txn-row:last-child { border-bottom: none; }
-    .txn-type-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .txn-type-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .txn-info { flex: 1; min-width: 0; }
     .txn-title { font-size: 0.88rem; font-weight: 500; }
     .txn-sub { font-size: 0.73rem; color: var(--text-light); margin-top: 1px; }
     .emergency-flag {
-      font-size: 0.7rem;
-      background: #FF6B6B20;
-      color: var(--danger);
-      border-radius: 6px;
-      padding: 1px 5px;
-      border: 1px solid #FF6B6B30;
+      font-size: 0.7rem; background: #FF6B6B20; color: var(--danger);
+      border-radius: 6px; padding: 1px 5px; border: 1px solid #FF6B6B30;
     }
 
-    .cc-summary-bar {
-      background: #7B5EA710;
-      border: 1px solid #7B5EA740;
-      border-radius: 10px;
-      padding: 0.8rem 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.8rem;
+    /* 信用卡對帳 */
+    .cc-month-total {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem; color: var(--text-light);
+      padding: 0.5rem 0 0.3rem;
     }
-    .cc-summary-bar label { font-size: 0.78rem; color: var(--text-light); }
-    .cc-summary-bar .val { font-size: 1.1rem; font-weight: 700; color: var(--color-qun); }
+    .cc-txn-row {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+    }
+    .cc-txn-row:last-child { border-bottom: none; }
+    .cc-txn-info { flex: 1; min-width: 0; }
+    .cc-txn-title { font-size: 0.88rem; font-weight: 500; }
+    .cc-txn-sub { font-size: 0.72rem; color: var(--text-light); margin-top: 1px; }
+
+    /* 已繳/未繳 badge */
+    .paid-cc-badge {
+      font-size: 0.68rem; padding: 3px 8px; border-radius: 8px;
+      background: #6AAB5E20; color: #3A8030; border: 1px solid #6AAB5E40;
+      cursor: pointer; white-space: nowrap;
+    }
+    .unpaid-cc-badge {
+      font-size: 0.68rem; padding: 3px 8px; border-radius: 8px;
+      background: #E8943A20; color: #B56A10; border: 1px solid #E8943A40;
+      cursor: pointer; white-space: nowrap;
+    }
+
+    /* 未繳彙總 */
+    .unpaid-section {
+      background: #FF6B6B08;
+      border: 1px solid #FF6B6B30;
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      margin-top: 0.8rem;
+    }
+    .unpaid-section-title {
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--danger); margin-bottom: 0.5rem;
+    }
+    .unpaid-item-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem; padding: 0.2rem 0;
+    }
+    .unpaid-item-row label { color: var(--text-light); }
+    .unpaid-item-row .val { font-weight: 600; color: var(--expense-color, #E05252); }
+    .unpaid-total-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.85rem; font-weight: 700;
+      border-top: 1px solid #FF6B6B30;
+      margin-top: 0.4rem; padding-top: 0.4rem;
+    }
 
     /* 分期付款 */
     .installment-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.1rem;
-      margin-bottom: 0.8rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 0.8rem;
     }
     .installment-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.6rem;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;
     }
-    .installment-name {
-      font-size: 0.95rem;
-      font-weight: 700;
-    }
-    .installment-status-chip {
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 10px;
-    }
+    .installment-name { font-size: 0.95rem; font-weight: 700; }
+    .installment-meta { font-size: 0.75rem; color: var(--text-light); display: flex; gap: 1rem; margin-bottom: 0.6rem; }
+    .installment-status-chip { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
     .chip-active { background: #5BB8E820; color: #2A8CBF; border: 1px solid #5BB8E840; }
     .chip-completed { background: #6AAB5E20; color: #3A8030; border: 1px solid #6AAB5E40; }
     .progress-bar-bg {
-      background: var(--border);
-      border-radius: 4px;
-      height: 6px;
-      margin: 0.5rem 0;
-      overflow: hidden;
+      background: var(--border); border-radius: 4px; height: 6px; margin: 0.5rem 0; overflow: hidden;
     }
     .progress-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: linear-gradient(90deg, #5BB8E8, #7B5EA7);
-      transition: width 0.4s;
-    }
-    .installment-meta {
-      font-size: 0.75rem;
-      color: var(--text-light);
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 0.6rem;
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #5BB8E8, #7B5EA7); transition: width 0.4s;
     }
     .payment-period-row {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.45rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.83rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem;
     }
     .payment-period-row:last-child { border-bottom: none; }
-    .period-ym {
-      width: 50px;
-      color: var(--text-light);
-      font-size: 0.75rem;
-    }
+    .period-ym { width: 50px; color: var(--text-light); font-size: 0.75rem; }
     .period-amount { flex: 1; font-weight: 500; }
     .paid-badge {
-      font-size: 0.68rem;
-      background: #6AAB5E20;
-      color: #3A8030;
-      border: 1px solid #6AAB5E40;
-      border-radius: 8px;
-      padding: 2px 7px;
+      font-size: 0.68rem; background: #6AAB5E20; color: #3A8030;
+      border: 1px solid #6AAB5E40; border-radius: 8px; padding: 2px 7px;
     }
     .pending-badge {
-      font-size: 0.68rem;
-      background: #E8943A20;
-      color: #B56A10;
-      border: 1px solid #E8943A40;
-      border-radius: 8px;
-      padding: 2px 7px;
+      font-size: 0.68rem; background: #E8943A20; color: #B56A10;
+      border: 1px solid #E8943A40; border-radius: 8px; padding: 2px 7px;
     }
     .pay-btn {
-      font-size: 0.72rem;
-      padding: 3px 10px;
-      border-radius: 8px;
-      background: var(--primary, #5BB8E8);
-      color: white;
-      border: none;
-      cursor: pointer;
+      font-size: 0.72rem; padding: 3px 10px; border-radius: 8px;
+      background: var(--primary, #5BB8E8); color: white; border: none; cursor: pointer;
     }
     .pay-btn:hover { opacity: 0.85; }
 
-    /* 轉移類型 */
-    .transfer-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #7B5EA7;
-      flex-shrink: 0;
-    }
+    /* 轉移 */
+    .transfer-dot { width: 10px; height: 10px; border-radius: 50%; background: #7B5EA7; flex-shrink: 0; }
 
     /* 固定支出 */
     .recurring-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.1rem;
-      margin-bottom: 0.8rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 0.8rem;
     }
-    .recurring-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
+    .recurring-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
     .recurring-name { font-size: 0.95rem; font-weight: 700; }
     .recurring-meta { font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.6rem; }
     .recur-row {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.45rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.83rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem;
     }
     .recur-row:last-child { border-bottom: none; }
     .recur-ym { width: 50px; color: var(--text-light); font-size: 0.75rem; }
     .recur-due { width: 36px; color: var(--text-light); font-size: 0.75rem; }
     .recur-amount { flex: 1; font-weight: 500; }
     .confirmed-badge {
-      font-size: 0.68rem;
-      background: #6AAB5E20;
-      color: #3A8030;
-      border: 1px solid #6AAB5E40;
-      border-radius: 8px;
-      padding: 2px 7px;
+      font-size: 0.68rem; background: #6AAB5E20; color: #3A8030;
+      border: 1px solid #6AAB5E40; border-radius: 8px; padding: 2px 7px;
     }
     .pending-recur-badge {
-      font-size: 0.68rem;
-      background: #E8943A20;
-      color: #B56A10;
-      border: 1px solid #E8943A40;
-      border-radius: 8px;
-      padding: 2px 7px;
+      font-size: 0.68rem; background: #E8943A20; color: #B56A10;
+      border: 1px solid #E8943A40; border-radius: 8px; padding: 2px 7px;
     }
     .confirm-btn {
-      font-size: 0.72rem;
-      padding: 3px 10px;
-      border-radius: 8px;
-      background: #E8943A;
-      color: white;
-      border: none;
-      cursor: pointer;
+      font-size: 0.72rem; padding: 3px 10px; border-radius: 8px;
+      background: #E8943A; color: white; border: none; cursor: pointer;
     }
     .confirm-btn:hover { opacity: 0.85; }
   </style>
@@ -277,28 +236,44 @@
 
   <div class="content-area">
 
-    <!-- 總計 -->
-    <div class="total-bar">
-      <div>
-        <label>本月總餘額</label>
-        <div class="val" id="grandTotal">計算中...</div>
-      </div>
-      <div style="font-size:2rem;">💎</div>
+    <!-- 帳戶總覽標題 -->
+    <div style="font-size:0.75rem;font-weight:700;color:var(--text-light);letter-spacing:0.05em;">帳戶總覽</div>
+    <div class="accounts-grid" id="accountsGrid">
+      <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
     </div>
 
-    <!-- 帳戶列表 -->
-    <div>
-      <div style="font-size:0.75rem;font-weight:700;color:var(--text-light);margin-bottom:0.6rem;letter-spacing:0.05em;">帳戶總覽</div>
-      <div class="accounts-grid" id="accountsGrid">
-        <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
+    <!-- 財務快照 -->
+    <div class="snapshot-card" id="snapshotCard" style="display:none;">
+      <div class="snapshot-row">
+        <label>帳戶總額</label>
+        <span class="val" id="snapTotal">—</span>
+      </div>
+      <div class="snapshot-row" id="snapCCRow" style="display:none;">
+        <div>
+          <label>未繳信用卡費</label>
+          <div class="snapshot-detail" id="snapCCDetail"></div>
+        </div>
+        <span class="val" style="color:var(--expense-color);" id="snapCC">—</span>
+      </div>
+      <div class="snapshot-row" id="snapInstRow" style="display:none;">
+        <div>
+          <label>未繳分期款</label>
+          <div class="snapshot-detail" id="snapInstDetail"></div>
+        </div>
+        <span class="val" style="color:var(--expense-color);" id="snapInst">—</span>
+      </div>
+      <hr class="snapshot-divider">
+      <div class="snapshot-net">
+        <label>淨可用餘額</label>
+        <span class="val" id="snapNet">—</span>
       </div>
     </div>
 
     <!-- Tab 切換 -->
-    <div class="tab-bar" style="margin-top:0.5rem;">
-      <button class="tab-btn active" id="ptab-txn" onclick="switchTab('txn')">收支明細</button>
-      <button class="tab-btn" id="ptab-cc" onclick="switchTab('cc')">信用卡對帳</button>
-      <button class="tab-btn" id="ptab-inst" onclick="switchTab('inst')">分期付款</button>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="ptab-txn"  onclick="switchTab('txn')">收支明細</button>
+      <button class="tab-btn" id="ptab-cc"   onclick="switchTab('cc')">信用卡</button>
+      <button class="tab-btn" id="ptab-inst" onclick="switchTab('inst')">分期</button>
       <button class="tab-btn" id="ptab-recur" onclick="switchTab('recur')">固定支出</button>
     </div>
 
@@ -324,19 +299,28 @@
 
     <!-- 信用卡對帳 -->
     <div id="ppanel-cc" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+      <div style="display:flex;align-items:center;margin-bottom:0.6rem;">
         <div class="month-switcher">
           <button class="month-btn" onclick="changeCCMonth(-1)">‹</button>
           <span id="ccYmDisplay" style="font-size:0.92rem;font-weight:700;"></span>
           <button class="month-btn" onclick="changeCCMonth(1)">›</button>
         </div>
       </div>
-      <div class="card">
-        <div class="cc-summary-bar">
-          <div><label>本月刷卡總額</label><div class="val" id="ccTotal">—</div></div>
-          <div style="font-size:1.8rem;">💳</div>
-        </div>
+      <!-- 當月明細 -->
+      <div class="card" id="ccMonthCard">
         <div id="ccList"></div>
+      </div>
+      <!-- 未繳彙總 -->
+      <div id="unpaidSummary"></div>
+    </div>
+
+    <!-- 分期付款 -->
+    <div id="ppanel-inst" style="display:none;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem;">
+        <button class="btn btn-primary btn-sm" onclick="openInstModal()">＋ 新增分期</button>
+      </div>
+      <div id="instList">
+        <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -346,16 +330,6 @@
         <button class="btn btn-primary btn-sm" onclick="openRecurModal()">＋ 新增固定支出</button>
       </div>
       <div id="recurList">
-        <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
-      </div>
-    </div>
-
-    <!-- 分期付款 -->
-    <div id="ppanel-inst" style="display:none;">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem;">
-        <button class="btn btn-primary btn-sm" onclick="openInstModal()">＋ 新增分期</button>
-      </div>
-      <div id="instList">
         <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -410,12 +384,10 @@
   <div id="txnModal" class="modal-overlay" style="display:none;" onclick="closeTxnModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-handle"></div>
-
       <div class="tab-bar" style="margin-bottom:1.2rem;">
         <button class="tab-btn" id="ttab-expense" onclick="setTxnType('expense')">支出</button>
         <button class="tab-btn" id="ttab-income" onclick="setTxnType('income')">收入</button>
       </div>
-
       <div class="form-group">
         <label class="form-label">日期 <span class="req">*</span></label>
         <input class="form-control" id="txDate" type="date">
@@ -427,13 +399,13 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">付款方式 <span class="req">*</span></label>
-          <select class="form-control form-select" id="txPayment" onchange="updateAccountOptions()">
+          <select class="form-control form-select" id="txPayment" onchange="onPaymentChange()">
             <option value="現金">💵 現金</option>
             <option value="轉帳">🔄 轉帳</option>
             <option value="信用卡刷卡">💳 信用卡刷卡</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="txAccountGroup">
           <label class="form-label">使用帳戶</label>
           <select class="form-control form-select" id="txAccount">
             <option value="">— 請選擇 —</option>
@@ -531,7 +503,7 @@
     </div>
   </div>
 
-  <!-- ====== 標記已繳 Modal ====== -->
+  <!-- ====== 標記分期已繳 Modal ====== -->
   <div id="payModal" class="modal-overlay" style="display:none;" onclick="closePayModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-handle"></div>
@@ -544,12 +516,11 @@
       <div class="form-group">
         <label class="form-label">付款方式</label>
         <select class="form-control form-select" id="payMethod">
-          <option value="轉帳">🔄 轉帳（從帳戶扣款）</option>
+          <option value="轉帳">🔄 轉帳</option>
           <option value="現金">💵 現金</option>
-          <option value="信用卡刷卡">💳 信用卡刷卡</option>
         </select>
       </div>
-      <div class="form-group" id="payAccountGroup">
+      <div class="form-group">
         <label class="form-label">扣款帳戶</label>
         <select class="form-control form-select" id="payAccount">
           <option value="">— 請選擇 —</option>
@@ -581,7 +552,6 @@
           <select class="form-control form-select" id="recurMethod">
             <option value="轉帳">🔄 轉帳</option>
             <option value="現金">💵 現金</option>
-            <option value="信用卡刷卡">💳 信用卡刷卡</option>
           </select>
         </div>
       </div>
@@ -605,7 +575,7 @@
     </div>
   </div>
 
-  <!-- ====== 確認繳款 Modal ====== -->
+  <!-- ====== 固定支出確認繳款 Modal ====== -->
   <div id="recurConfirmModal" class="modal-overlay" style="display:none;" onclick="closeRecurConfirmModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-handle"></div>
@@ -638,16 +608,21 @@
   <script src="src/js/auth.js"></script>
   <script>
     let currentUser = null;
-    let accounts = [];
-    let currentYM = getNowYM();
-    let ccYM      = new Date().toISOString().slice(0, 7);
-    let currentTab = 'txn';
-    let txnType = 'expense';
+    let accounts    = [];
+    let currentYM   = getNowYM();
+    let ccYM        = getNowYM();
+    let currentTab  = 'txn';
+    let txnType     = 'expense';
 
-    // 標記已繳用的暫存
+    // 分期標記已繳暫存
     let _pendingPaymentId   = null;
     let _pendingInstAccount = null;
     let _pendingPayAmount   = 0;
+
+    // 固定支出確認繳款暫存
+    let _pendingRecurPaymentId  = null;
+    let _pendingRecurAccountId  = null;
+    let _pendingRecurDueDate    = null;
 
     async function init() {
       const auth = await requireAuth();
@@ -668,39 +643,35 @@
       try {
         const start = monthStart(currentYM);
         const end   = monthEnd(currentYM);
-
         const [accRes, allTxnRes, monthTxnRes] = await Promise.all([
           db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
-          db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
+          db.from('personal_transactions').select('account_id, type, amount, payment_method').eq('user_id', currentUser.id),
           db.from('personal_transactions').select('*, personal_accounts(name)')
             .eq('user_id', currentUser.id).gte('date', start).lte('date', end)
             .order('date', { ascending: false }).order('created_at', { ascending: false }),
         ]);
-
         accounts = accRes.data || [];
         _allTxns = allTxnRes.data || [];
-
         const balMap = buildBalMap();
         renderAccounts(balMap);
         updateAccountFilter();
-        updateAccountOptions();
-        updateTransferOptions();
-        updateInstAccountOptions();
+        updateAllSelects();
         renderTxns(monthTxnRes.data || []);
+        loadSnapshot();
       } catch (err) {
         console.error('loadAllData error:', err);
         document.getElementById('accountsGrid').innerHTML =
-          '<div class="empty-state"><div class="empty-emoji">⚠️</div><p>載入失敗，請重新整理頁面</p></div>';
-        document.getElementById('txnList').innerHTML = '';
-        document.getElementById('grandTotal').textContent = '—';
+          '<div class="empty-state"><div class="empty-emoji">⚠️</div><p>載入失敗，請重新整理</p></div>';
       }
     }
 
+    // 帳戶餘額：信用卡刷卡不計入（未繳款前不扣帳戶）
     function buildBalMap() {
       const balMap = {};
       accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
       (_allTxns || []).forEach(t => {
         if (balMap[t.account_id] === undefined) return;
+        if (t.payment_method === '信用卡刷卡') return; // CC 消費不即時扣帳
         balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
       });
       return balMap;
@@ -709,27 +680,24 @@
     async function loadAccounts() {
       const [accRes, allTxnRes] = await Promise.all([
         db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
-        db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
+        db.from('personal_transactions').select('account_id, type, amount, payment_method').eq('user_id', currentUser.id),
       ]);
       accounts = accRes.data || [];
       _allTxns = allTxnRes.data || [];
-
       const balMap = buildBalMap();
       renderAccounts(balMap);
       updateAccountFilter();
-      updateAccountOptions();
-      updateTransferOptions();
-      updateInstAccountOptions();
+      updateAllSelects();
+      loadSnapshot();
     }
 
     function renderAccounts(balMap) {
       const grid = document.getElementById('accountsGrid');
       if (accounts.length === 0) {
         grid.innerHTML = '<div class="empty-state"><div class="empty-emoji">🏦</div><p>還沒有帳戶，點右上角「＋ 帳戶」新增</p></div>';
-        document.getElementById('grandTotal').textContent = '$0';
+        document.getElementById('snapshotCard').style.display = 'none';
         return;
       }
-
       let grand = 0;
       grid.innerHTML = '';
       accounts.forEach(a => {
@@ -744,9 +712,7 @@
             </div>
             <div class="account-info">
               <div class="account-name-row">
-                ${a.name}
-                <span class="account-type-chip">${typeLabel}</span>
-                ${emergencyBadge}
+                ${a.name}<span class="account-type-chip">${typeLabel}</span>${emergencyBadge}
               </div>
               <div class="account-balance" style="color:${bal>=0?'var(--text)':'var(--expense-color)'}">
                 ${formatMoney(bal)}
@@ -756,7 +722,66 @@
               style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:1rem;padding:4px;">🗑</button>
           </div>`);
       });
-      document.getElementById('grandTotal').textContent = formatMoney(grand);
+      // 更新快照的帳戶總額
+      document.getElementById('snapTotal').textContent = formatMoney(grand);
+      document.getElementById('snapshotCard').style.display = '';
+    }
+
+    async function loadSnapshot() {
+      // 未繳信用卡費（全部時間，is_paid = false，payment_method = 信用卡刷卡）
+      const { data: unpaidCC } = await db
+        .from('personal_transactions')
+        .select('amount, notes, date')
+        .eq('user_id', currentUser.id)
+        .eq('payment_method', '信用卡刷卡')
+        .eq('type', 'expense')
+        .eq('is_paid', false);
+
+      // 未繳分期款（status = pending）
+      const { data: unpaidInst } = await db
+        .from('personal_installment_payments')
+        .select('amount, ym, personal_installments(name)')
+        .eq('user_id', currentUser.id)
+        .eq('status', 'pending');
+
+      const ccTotal   = (unpaidCC || []).reduce((s, t) => s + Number(t.amount), 0);
+      const instTotal = (unpaidInst || []).reduce((s, t) => s + Number(t.amount), 0);
+      const grandTotal = Number(document.getElementById('snapTotal').textContent.replace(/[^0-9.-]/g,'')) || 0;
+      const net = grandTotal - ccTotal - instTotal;
+
+      // CC 行
+      const ccRow = document.getElementById('snapCCRow');
+      if (ccTotal > 0) {
+        document.getElementById('snapCC').textContent = `-${formatMoney(ccTotal)}`;
+        document.getElementById('snapCCDetail').textContent = `共 ${(unpaidCC||[]).length} 筆未標記已繳`;
+        ccRow.style.display = '';
+      } else {
+        ccRow.style.display = 'none';
+      }
+
+      // 分期行
+      const instRow = document.getElementById('snapInstRow');
+      if (instTotal > 0) {
+        document.getElementById('snapInst').textContent = `-${formatMoney(instTotal)}`;
+        document.getElementById('snapInstDetail').textContent = `共 ${(unpaidInst||[]).length} 期待繳`;
+        instRow.style.display = '';
+      } else {
+        instRow.style.display = 'none';
+      }
+
+      // 淨餘額
+      const netEl = document.getElementById('snapNet');
+      netEl.textContent = formatMoney(net);
+      netEl.style.color = net >= 0 ? 'var(--income-color, #4CAF50)' : 'var(--expense-color, #E05252)';
+    }
+
+    // 更新所有下拉選單
+    function updateAllSelects() {
+      updateAccountFilter();
+      updateAccountOptions();
+      updateTransferOptions();
+      updateInstAccountOptions();
+      updateRecurAccountOptions();
     }
 
     function updateAccountFilter() {
@@ -776,14 +801,12 @@
       const sel = document.getElementById('txAccount');
       if (!sel) return;
       sel.innerHTML = '<option value="">— 請選擇 —</option>';
-      accounts.filter(a => {
-        if (payment === '現金') return a.type === 'cash';
-        return a.type === 'bank';
-      }).forEach(a => {
-        const opt = document.createElement('option');
-        opt.value = a.id; opt.textContent = a.name;
-        sel.appendChild(opt);
-      });
+      accounts.filter(a => payment === '現金' ? a.type === 'cash' : a.type === 'bank')
+        .forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id; opt.textContent = a.name;
+          sel.appendChild(opt);
+        });
     }
 
     function updateTransferOptions() {
@@ -794,7 +817,8 @@
         sel.innerHTML = '<option value="">— 請選擇 —</option>';
         accounts.forEach(a => {
           const opt = document.createElement('option');
-          opt.value = a.id; opt.textContent = `${a.type === 'bank' ? '🏦' : '💵'} ${a.name}`;
+          opt.value = a.id;
+          opt.textContent = `${a.type==='bank'?'🏦':'💵'} ${a.name}`;
           if (a.id === cur) opt.selected = true;
           sel.appendChild(opt);
         });
@@ -809,26 +833,41 @@
         sel.innerHTML = '<option value="">— 請選擇 —</option>';
         accounts.forEach(a => {
           const opt = document.createElement('option');
-          opt.value = a.id; opt.textContent = `${a.type === 'bank' ? '🏦' : '💵'} ${a.name}`;
+          opt.value = a.id;
+          opt.textContent = `${a.type==='bank'?'🏦':'💵'} ${a.name}`;
           if (a.id === cur) opt.selected = true;
           sel.appendChild(opt);
         });
       });
     }
 
-    async function loadTransactions() {
-      const start = monthStart(currentYM);
-      const end   = monthEnd(currentYM);
-      const accountId = document.getElementById('filterAccount').value;
+    function updateRecurAccountOptions() {
+      ['recurAccount', 'recurConfirmAccount'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— 請選擇 —</option>';
+        accounts.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = `${a.type==='bank'?'🏦':'💵'} ${a.name}`;
+          if (a.id === cur) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      });
+    }
 
+    // ======= 收支明細 =======
+    async function loadTransactions() {
+      const start     = monthStart(currentYM);
+      const end       = monthEnd(currentYM);
+      const accountId = document.getElementById('filterAccount').value;
       let query = db.from('personal_transactions')
         .select('*, personal_accounts(name)')
         .eq('user_id', currentUser.id)
-        .gte('date', start)
-        .lte('date', end)
+        .gte('date', start).lte('date', end)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
-
       if (accountId) query = query.eq('account_id', accountId);
       const { data: txns } = await query;
       renderTxns(txns || []);
@@ -843,12 +882,12 @@
       el.innerHTML = list.map(t => {
         const isTransfer = !!t.transfer_group_id;
         const isExpense  = t.type === 'expense';
+        const isCC       = t.payment_method === '信用卡刷卡';
         const acc = accounts.find(a => a.id === t.account_id);
         const isEmergency = acc?.is_emergency && isExpense;
         const accName = t.personal_accounts?.name || '';
 
         if (isTransfer) {
-          const label = isExpense ? `轉出 → ${t.notes?.replace(/^轉帳轉移：.+?→\s*/,'') || ''}` : `← 轉入（${accName}）`;
           return `
             <div class="txn-row">
               <div class="transfer-dot"></div>
@@ -866,18 +905,19 @@
             </div>`;
         }
 
+        const ccBadge = isCC ? `<span style="font-size:0.7rem;background:#7B5EA720;color:#7B5EA7;border-radius:6px;padding:1px 5px;border:1px solid #7B5EA740;">💳 信用卡</span>` : '';
         return `
           <div class="txn-row" style="${isEmergency?'background:#FF6B6B08;border-radius:8px;padding-left:6px;':''}">
-            <div class="txn-type-dot" style="background:${isExpense?'var(--expense-color)':'var(--income-color)'}"></div>
+            <div class="txn-type-dot" style="background:${isCC?'#7B5EA7':isExpense?'var(--expense-color)':'var(--income-color)'}"></div>
             <div class="txn-info">
               <div class="txn-title">
-                ${t.notes || (isExpense ? '支出' : '收入')}
+                ${t.notes || (isExpense ? '支出' : '收入')} ${ccBadge}
                 ${isEmergency ? '<span class="emergency-flag">🚨 緊急備用</span>' : ''}
               </div>
               <div class="txn-sub">${fmtDate(t.date)} ・${t.payment_method}${accName?' ・'+accName:''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:0.5rem;">
-              <div style="font-size:0.95rem;font-weight:700;color:${isExpense?'var(--expense-color)':'var(--income-color)'}">
+              <div style="font-size:0.95rem;font-weight:700;color:${isCC?'#7B5EA7':isExpense?'var(--expense-color)':'var(--income-color)'}">
                 ${isExpense?'-':'+'} ${formatMoney(t.amount)}
               </div>
               <button onclick="deleteTxn('${t.id}')"
@@ -887,114 +927,150 @@
       }).join('');
     }
 
+    // ======= 信用卡對帳 =======
     async function loadCCData() {
       const start = monthStart(ccYM);
       const end   = monthEnd(ccYM);
-      const { data: txns } = await db
+
+      // 當月明細（含已繳/未繳）
+      const { data: monthCC } = await db
         .from('personal_transactions')
-        .select('*, personal_accounts(name)')
+        .select('*')
         .eq('user_id', currentUser.id)
         .eq('payment_method', '信用卡刷卡')
         .eq('type', 'expense')
-        .gte('date', start)
-        .lte('date', end)
+        .gte('date', start).lte('date', end)
         .order('date', { ascending: false });
 
-      const list = txns || [];
-      const total = list.reduce((s, t) => s + Number(t.amount), 0);
-      document.getElementById('ccTotal').textContent = formatMoney(total);
+      const list = monthCC || [];
+      const paidTotal   = list.filter(t => t.is_paid).reduce((s,t) => s+Number(t.amount), 0);
+      const unpaidTotal = list.filter(t => !t.is_paid).reduce((s,t) => s+Number(t.amount), 0);
 
+      const [y, m] = ccYM.split('-');
       const el = document.getElementById('ccList');
       if (list.length === 0) {
-        el.innerHTML = '<div class="empty-state" style="padding:1rem 0;"><div class="empty-emoji">💳</div><p>這個月沒有刷卡紀錄</p></div>';
-        return;
+        el.innerHTML = `<div class="cc-month-total"><span>本月無刷卡紀錄</span></div>`;
+      } else {
+        el.innerHTML = `
+          <div class="cc-month-total">
+            <span>✓ 已繳 ${formatMoney(paidTotal)}</span>
+            <span style="color:var(--expense-color);">待繳 ${formatMoney(unpaidTotal)}</span>
+          </div>` +
+          list.map(t => `
+            <div class="cc-txn-row">
+              <div class="cc-txn-info">
+                <div class="cc-txn-title">${t.notes || '刷卡支出'}</div>
+                <div class="cc-txn-sub">${fmtDate(t.date)}</div>
+              </div>
+              <span style="font-size:0.9rem;font-weight:700;color:#7B5EA7;margin-right:0.5rem;">
+                ${formatMoney(t.amount)}
+              </span>
+              <span class="${t.is_paid ? 'paid-cc-badge' : 'unpaid-cc-badge'}"
+                onclick="toggleCCPaid('${t.id}', ${t.is_paid})">
+                ${t.is_paid ? '✓ 已繳' : '未繳'}
+              </span>
+            </div>`).join('');
       }
-      el.innerHTML = list.map(t => `
-        <div class="txn-row">
-          <div style="font-size:0.85rem;color:var(--text-light);min-width:36px;">${fmtDate(t.date)}</div>
-          <div class="txn-info">
-            <div class="txn-title">${t.notes || '刷卡支出'}</div>
-            <div class="txn-sub">${t.personal_accounts?.name || ''}</div>
-          </div>
-          <div style="font-size:0.95rem;font-weight:700;color:var(--color-qun)">
-            ${formatMoney(t.amount)}
-          </div>
-        </div>`).join('');
+
+      // 未繳彙總（跨月，全部未繳）
+      await renderUnpaidSummary();
     }
 
-    // ======= 分期付款 =======
-    async function loadInstallments() {
-      const el = document.getElementById('instList');
-      el.innerHTML = '<div class="loading" style="min-height:80px;"><div class="spinner"></div></div>';
-
-      const { data: insts } = await db
-        .from('personal_installments')
-        .select('*, personal_accounts(name), personal_installment_payments(*)')
+    async function renderUnpaidSummary() {
+      const { data: allUnpaid } = await db
+        .from('personal_transactions')
+        .select('id, amount, notes, date')
         .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
+        .eq('payment_method', '信用卡刷卡')
+        .eq('type', 'expense')
+        .eq('is_paid', false)
+        .order('date', { ascending: true });
 
-      const list = insts || [];
-      if (list.length === 0) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-emoji">📋</div><p>還沒有分期計畫，點「＋ 新增分期」建立</p></div>';
+      const { data: unpaidInst } = await db
+        .from('personal_installment_payments')
+        .select('amount, ym, personal_installments(name)')
+        .eq('user_id', currentUser.id)
+        .eq('status', 'pending');
+
+      const ccList   = allUnpaid || [];
+      const instList = unpaidInst || [];
+      const ccTotal  = ccList.reduce((s,t) => s+Number(t.amount), 0);
+      const instTotal= instList.reduce((s,t) => s+Number(t.amount), 0);
+      const grandTotal = Number(document.getElementById('snapTotal').textContent.replace(/[^0-9.-]/g,'')) || 0;
+      const net = grandTotal - ccTotal - instTotal;
+
+      const el = document.getElementById('unpaidSummary');
+      if (ccList.length === 0 && instList.length === 0) {
+        el.innerHTML = `
+          <div style="text-align:center;padding:1rem 0;font-size:0.85rem;color:var(--text-light);">
+            🎉 目前沒有未繳費用
+          </div>`;
         return;
       }
 
-      el.innerHTML = list.map(inst => {
-        const payments = (inst.personal_installment_payments || [])
-          .sort((a, b) => a.period_index - b.period_index);
-        const paidCount = payments.filter(p => p.status === 'paid').length;
-        const pct = inst.total_periods > 0 ? Math.round(paidCount / inst.total_periods * 100) : 0;
-        const isCompleted = inst.status === 'completed';
-        const accName = inst.personal_accounts?.name || '未指定帳戶';
+      const ccRows = ccList.map(t => `
+        <div class="unpaid-item-row">
+          <label>${fmtDate(t.date)} ${t.notes || '刷卡支出'}</label>
+          <span class="val">${formatMoney(t.amount)}</span>
+        </div>`).join('');
 
-        const paymentsHtml = payments.map(p => {
-          const [y, m] = p.ym.split('-');
-          const ymLabel = `${y}/${m}`;
-          if (p.status === 'paid') {
-            return `<div class="payment-period-row">
-              <div class="period-ym">${ymLabel}</div>
-              <div class="period-amount">第 ${p.period_index + 1} 期 ${formatMoney(p.amount)}</div>
-              <span class="paid-badge">✓ 已繳</span>
-              ${p.paid_date ? `<span style="font-size:0.7rem;color:var(--text-light);">${fmtDate(p.paid_date)}</span>` : ''}
-            </div>`;
-          } else {
-            return `<div class="payment-period-row">
-              <div class="period-ym">${ymLabel}</div>
-              <div class="period-amount">第 ${p.period_index + 1} 期 ${formatMoney(p.amount)}</div>
-              <span class="pending-badge">待繳</span>
-              <button class="pay-btn" onclick="openPayModal('${p.id}','${inst.account_id||''}',${p.amount},'${inst.name} 第${p.period_index+1}期')">標記已繳</button>
-            </div>`;
-          }
-        }).join('');
-
+      const instRows = instList.map(t => {
+        const [y,mm] = (t.ym||'').split('-');
         return `
-          <div class="installment-card">
-            <div class="installment-header">
-              <div class="installment-name">📋 ${inst.name}</div>
-              <div style="display:flex;gap:0.4rem;align-items:center;">
-                <span class="installment-status-chip ${isCompleted?'chip-completed':'chip-active'}">
-                  ${isCompleted ? '已完成' : '進行中'}
-                </span>
-                <button onclick="deleteInst('${inst.id}')"
-                  style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;">🗑</button>
-              </div>
-            </div>
-            <div class="installment-meta">
-              <span>總額 ${formatMoney(inst.total_amount)}</span>
-              <span>每期 ${formatMoney(inst.installment_amount)}</span>
-              <span>扣款：${accName}</span>
-            </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width:${pct}%"></div>
-            </div>
-            <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.6rem;">
-              ${paidCount} / ${inst.total_periods} 期完成（${pct}%）
-            </div>
-            <div>${paymentsHtml}</div>
+          <div class="unpaid-item-row">
+            <label>${y}/${mm} ${t.personal_installments?.name || '分期'}</label>
+            <span class="val">${formatMoney(t.amount)}</span>
           </div>`;
       }).join('');
+
+      el.innerHTML = `
+        <div class="unpaid-section">
+          ${ccList.length > 0 ? `
+            <div class="unpaid-section-title">💳 未繳信用卡費（${ccList.length} 筆）</div>
+            ${ccRows}
+            <div class="unpaid-total-row">
+              <span>小計</span>
+              <span style="color:var(--expense-color);">${formatMoney(ccTotal)}</span>
+            </div>` : ''}
+
+          ${instList.length > 0 ? `
+            <div class="unpaid-section-title" style="margin-top:${ccList.length>0?'0.8rem':'0'};">
+              📋 未繳分期款（${instList.length} 期）
+            </div>
+            ${instRows}
+            <div class="unpaid-total-row">
+              <span>小計</span>
+              <span style="color:var(--expense-color);">${formatMoney(instTotal)}</span>
+            </div>` : ''}
+
+          <div style="margin-top:0.8rem;padding-top:0.6rem;border-top:1px solid #FF6B6B40;">
+            <div class="unpaid-item-row">
+              <label>帳戶總額</label>
+              <span style="font-weight:600;">${formatMoney(grandTotal)}</span>
+            </div>
+            ${ccTotal > 0 ? `<div class="unpaid-item-row"><label>未繳信用卡費</label><span style="color:var(--expense-color);">-${formatMoney(ccTotal)}</span></div>` : ''}
+            ${instTotal > 0 ? `<div class="unpaid-item-row"><label>未繳分期款</label><span style="color:var(--expense-color);">-${formatMoney(instTotal)}</span></div>` : ''}
+            <div class="unpaid-total-row">
+              <span>淨可用餘額</span>
+              <span style="color:${net>=0?'var(--income-color,#4CAF50)':'var(--expense-color)'};">
+                ${formatMoney(net)}
+              </span>
+            </div>
+          </div>
+        </div>`;
     }
 
+    async function toggleCCPaid(txnId, currentlyPaid) {
+      const { error } = await db
+        .from('personal_transactions')
+        .update({ is_paid: !currentlyPaid })
+        .eq('id', txnId);
+      if (error) { showToast('更新失敗', 'error'); return; }
+      loadCCData();
+      loadSnapshot();
+    }
+
+    // ======= Tab 切換 =======
     function switchTab(tab) {
       currentTab = tab;
       ['txn','cc','inst','recur'].forEach(t => {
@@ -1007,28 +1083,23 @@
     }
 
     function changeMonth(delta) {
-      const [y, m] = currentYM.split('-').map(Number);
-      const d = new Date(y, m - 1 + delta, 1);
-      currentYM = d.toISOString().slice(0, 7);
+      const [y,m] = currentYM.split('-').map(Number);
+      currentYM = new Date(y, m-1+delta, 1).toISOString().slice(0,7);
       updateYMDisplay();
       loadTransactions();
     }
-
     function changeCCMonth(delta) {
-      const [y, m] = ccYM.split('-').map(Number);
-      const d = new Date(y, m - 1 + delta, 1);
-      ccYM = d.toISOString().slice(0, 7);
+      const [y,m] = ccYM.split('-').map(Number);
+      ccYM = new Date(y, m-1+delta, 1).toISOString().slice(0,7);
       updateCCYMDisplay();
       loadCCData();
     }
-
     function updateYMDisplay() {
-      const [y, m] = currentYM.split('-');
+      const [y,m] = currentYM.split('-');
       document.getElementById('ymDisplay').textContent = `${y}/${m}`;
     }
-
     function updateCCYMDisplay() {
-      const [y, m] = ccYM.split('-');
+      const [y,m] = ccYM.split('-');
       document.getElementById('ccYmDisplay').textContent = `${y}/${m}`;
     }
 
@@ -1040,8 +1111,7 @@
       const name = document.getElementById('accName').value.trim();
       if (!name) { showToast('請輸入帳戶名稱', 'error'); return; }
       const { error } = await db.from('personal_accounts').insert({
-        user_id: currentUser.id,
-        name,
+        user_id: currentUser.id, name,
         type: document.getElementById('accType').value,
         initial_balance: Number(document.getElementById('accInitial').value) || 0,
         is_emergency: document.getElementById('accEmergency').checked,
@@ -1065,11 +1135,21 @@
     }
 
     // ======= 收支 =======
+    function onPaymentChange() {
+      const payment = document.getElementById('txPayment').value;
+      const group   = document.getElementById('txAccountGroup');
+      // 信用卡刷卡不連結帳戶
+      group.style.display = payment === '信用卡刷卡' ? 'none' : '';
+      if (payment !== '信用卡刷卡') updateAccountOptions();
+    }
+
     function openTxnModal() {
       setTxnType('expense');
-      document.getElementById('txDate').value = today();
+      document.getElementById('txDate').value   = today();
       document.getElementById('txAmount').value = '';
-      document.getElementById('txNotes').value = '';
+      document.getElementById('txNotes').value  = '';
+      document.getElementById('txPayment').value = '現金';
+      onPaymentChange();
       document.getElementById('txnModal').style.display = 'flex';
     }
     function closeTxnModal() { document.getElementById('txnModal').style.display = 'none'; }
@@ -1081,15 +1161,14 @@
     }
 
     async function saveTxn() {
-      const date   = document.getElementById('txDate').value;
-      const amount = Number(document.getElementById('txAmount').value);
+      const date    = document.getElementById('txDate').value;
+      const amount  = Number(document.getElementById('txAmount').value);
+      const payment = document.getElementById('txPayment').value;
       if (!date || !amount) { showToast('請填寫日期與金額', 'error'); return; }
+      const accountId = payment === '信用卡刷卡' ? null : (document.getElementById('txAccount').value || null);
       const { error } = await db.from('personal_transactions').insert({
-        user_id: currentUser.id,
-        date, amount,
-        type: txnType,
-        payment_method: document.getElementById('txPayment').value,
-        account_id: document.getElementById('txAccount').value || null,
+        user_id: currentUser.id, date, amount, type: txnType,
+        payment_method: payment, account_id: accountId,
         notes: document.getElementById('txNotes').value.trim() || null,
       });
       if (error) { showToast('儲存失敗', 'error'); return; }
@@ -1111,9 +1190,9 @@
     // ======= 帳戶轉移 =======
     function openTransferModal() {
       updateTransferOptions();
-      document.getElementById('tfDate').value = today();
+      document.getElementById('tfDate').value   = today();
       document.getElementById('tfAmount').value = '';
-      document.getElementById('tfNotes').value = '';
+      document.getElementById('tfNotes').value  = '';
       document.getElementById('transferModal').style.display = 'flex';
     }
     function closeTransferModal() { document.getElementById('transferModal').style.display = 'none'; }
@@ -1124,34 +1203,18 @@
       const fromId = document.getElementById('tfFrom').value;
       const toId   = document.getElementById('tfTo').value;
       const notes  = document.getElementById('tfNotes').value.trim();
-
       if (!date || !amount) { showToast('請填寫日期與金額', 'error'); return; }
       if (!fromId || !toId) { showToast('請選擇來源與目標帳戶', 'error'); return; }
       if (fromId === toId)  { showToast('來源與目標不能相同', 'error'); return; }
-
       const fromAcc = accounts.find(a => a.id === fromId);
       const toAcc   = accounts.find(a => a.id === toId);
       const groupId = crypto.randomUUID();
-      const transferNotes = notes ||
-        `帳戶轉移：${fromAcc?.name || ''} → ${toAcc?.name || ''}`;
-
+      const transferNotes = notes || `帳戶轉移：${fromAcc?.name||''} → ${toAcc?.name||''}`;
       const { error } = await db.from('personal_transactions').insert([
-        {
-          user_id: currentUser.id, date, amount,
-          type: 'expense',
-          payment_method: '轉帳',
-          account_id: fromId,
-          notes: transferNotes,
-          transfer_group_id: groupId,
-        },
-        {
-          user_id: currentUser.id, date, amount,
-          type: 'income',
-          payment_method: '轉帳',
-          account_id: toId,
-          notes: transferNotes,
-          transfer_group_id: groupId,
-        },
+        { user_id: currentUser.id, date, amount, type: 'expense',
+          payment_method: '轉帳', account_id: fromId, notes: transferNotes, transfer_group_id: groupId },
+        { user_id: currentUser.id, date, amount, type: 'income',
+          payment_method: '轉帳', account_id: toId, notes: transferNotes, transfer_group_id: groupId },
       ]);
       if (error) { showToast('轉移失敗', 'error'); return; }
       showToast(`已轉移 ${formatMoney(amount)} ✓`, 'success');
@@ -1172,10 +1235,66 @@
     }
 
     // ======= 分期付款 =======
+    async function loadInstallments() {
+      const el = document.getElementById('instList');
+      el.innerHTML = '<div class="loading" style="min-height:80px;"><div class="spinner"></div></div>';
+      const { data: insts } = await db
+        .from('personal_installments')
+        .select('*, personal_accounts(name), personal_installment_payments(*)')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+      const list = insts || [];
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-emoji">📋</div><p>還沒有分期計畫，點「＋ 新增分期」建立</p></div>';
+        return;
+      }
+      el.innerHTML = list.map(inst => {
+        const payments    = (inst.personal_installment_payments||[]).sort((a,b)=>a.period_index-b.period_index);
+        const paidCount   = payments.filter(p=>p.status==='paid').length;
+        const pct         = inst.total_periods > 0 ? Math.round(paidCount/inst.total_periods*100) : 0;
+        const isCompleted = inst.status === 'completed';
+        const accName     = inst.personal_accounts?.name || '未指定帳戶';
+        const paymentsHtml = payments.map(p => {
+          const [y,mm] = p.ym.split('-');
+          return p.status === 'paid'
+            ? `<div class="payment-period-row">
+                <div class="period-ym">${y}/${mm}</div>
+                <div class="period-amount">第 ${p.period_index+1} 期 ${formatMoney(p.amount)}</div>
+                <span class="paid-badge">✓ 已繳</span>
+                ${p.paid_date?`<span style="font-size:0.7rem;color:var(--text-light);">${fmtDate(p.paid_date)}</span>`:''}
+               </div>`
+            : `<div class="payment-period-row">
+                <div class="period-ym">${y}/${mm}</div>
+                <div class="period-amount">第 ${p.period_index+1} 期 ${formatMoney(p.amount)}</div>
+                <span class="pending-badge">待繳</span>
+                <button class="pay-btn" onclick="openPayModal('${p.id}','${inst.account_id||''}',${p.amount},'${inst.name} 第${p.period_index+1}期')">標記已繳</button>
+               </div>`;
+        }).join('');
+        return `
+          <div class="installment-card">
+            <div class="installment-header">
+              <div class="installment-name">📋 ${inst.name}</div>
+              <div style="display:flex;gap:0.4rem;align-items:center;">
+                <span class="installment-status-chip ${isCompleted?'chip-completed':'chip-active'}">${isCompleted?'已完成':'進行中'}</span>
+                <button onclick="deleteInst('${inst.id}')" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;">🗑</button>
+              </div>
+            </div>
+            <div class="installment-meta">
+              <span>總額 ${formatMoney(inst.total_amount)}</span>
+              <span>每期 ${formatMoney(inst.installment_amount)}</span>
+              <span>扣款：${accName}</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.6rem;">${paidCount}/${inst.total_periods} 期完成（${pct}%）</div>
+            <div>${paymentsHtml}</div>
+          </div>`;
+      }).join('');
+    }
+
     function openInstModal() {
-      document.getElementById('instName').value = '';
-      document.getElementById('instTotal').value = '';
-      document.getElementById('instEach').value = '';
+      document.getElementById('instName').value    = '';
+      document.getElementById('instTotal').value   = '';
+      document.getElementById('instEach').value    = '';
       document.getElementById('instPeriods').value = '';
       document.getElementById('instStartYM').value = getNowYM();
       updateInstAccountOptions();
@@ -1190,32 +1309,22 @@
       const periods = Number(document.getElementById('instPeriods').value);
       const startYM = document.getElementById('instStartYM').value;
       const accId   = document.getElementById('instAccount').value || null;
-
-      if (!name || !total || !each || !periods || !startYM) {
-        showToast('請填寫所有必填欄位', 'error'); return;
-      }
-
-      // 建立分期計畫
+      if (!name||!total||!each||!periods||!startYM) { showToast('請填寫所有必填欄位','error'); return; }
       const { data: inst, error: instErr } = await db
         .from('personal_installments')
-        .insert({ user_id: currentUser.id, name, total_amount: total,
-          installment_amount: each, total_periods: periods,
-          start_ym: startYM, account_id: accId })
+        .insert({ user_id:currentUser.id, name, total_amount:total,
+          installment_amount:each, total_periods:periods, start_ym:startYM, account_id:accId })
         .select().single();
-      if (instErr) { showToast('建立失敗', 'error'); return; }
-
-      // 產生每期付款紀錄
-      const [sy, sm] = startYM.split('-').map(Number);
-      const payRows = Array.from({ length: periods }, (_, i) => {
-        const d = new Date(sy, sm - 1 + i, 1);
-        const ym = d.toISOString().slice(0, 7);
-        return { installment_id: inst.id, user_id: currentUser.id,
-          period_index: i, ym, amount: each };
+      if (instErr) { showToast('建立失敗','error'); return; }
+      const [sy,sm] = startYM.split('-').map(Number);
+      const payRows = Array.from({length:periods},(_,i) => {
+        const d  = new Date(sy, sm-1+i, 1);
+        const ym = d.toISOString().slice(0,7);
+        return { installment_id:inst.id, user_id:currentUser.id, period_index:i, ym, amount:each };
       });
       const { error: payErr } = await db.from('personal_installment_payments').insert(payRows);
-      if (payErr) { showToast('建立期數紀錄失敗', 'error'); return; }
-
-      showToast(`「${name}」已建立，共 ${periods} 期 ✓`, 'success');
+      if (payErr) { showToast('建立期數紀錄失敗','error'); return; }
+      showToast(`「${name}」已建立，共 ${periods} 期 ✓`,'success');
       closeInstModal();
       loadInstallments();
     }
@@ -1223,12 +1332,11 @@
     async function deleteInst(instId) {
       if (!confirm('確定刪除這個分期計畫？（所有期數紀錄也會刪除）')) return;
       const { error } = await db.from('personal_installments').delete().eq('id', instId);
-      if (error) { showToast('刪除失敗', 'error'); return; }
+      if (error) { showToast('刪除失敗','error'); return; }
       showToast('已刪除 ✓');
       loadInstallments();
     }
 
-    // ======= 標記已繳 =======
     function openPayModal(paymentId, instAccountId, amount, desc) {
       _pendingPaymentId   = paymentId;
       _pendingInstAccount = instAccountId;
@@ -1236,10 +1344,7 @@
       document.getElementById('payModalDesc').textContent = `${desc}，金額 ${formatMoney(amount)}`;
       document.getElementById('payDate').value = today();
       updateInstAccountOptions();
-      // 若分期計畫有指定帳戶，預設選到該帳戶
-      if (instAccountId) {
-        document.getElementById('payAccount').value = instAccountId;
-      }
+      if (instAccountId) document.getElementById('payAccount').value = instAccountId;
       document.getElementById('payModal').style.display = 'flex';
     }
     function closePayModal() {
@@ -1248,127 +1353,74 @@
     }
 
     async function confirmPay() {
-      const date    = document.getElementById('payDate').value;
-      const method  = document.getElementById('payMethod').value;
-      const accId   = document.getElementById('payAccount').value || null;
-      if (!date) { showToast('請填寫繳款日期', 'error'); return; }
-
-      // 建立支出交易
+      const date  = document.getElementById('payDate').value;
+      const accId = document.getElementById('payAccount').value || null;
+      if (!date) { showToast('請填寫繳款日期','error'); return; }
       let txnId = null;
       if (accId) {
         const { data: txn, error: txnErr } = await db
           .from('personal_transactions')
-          .insert({
-            user_id: currentUser.id,
-            date,
-            amount: _pendingPayAmount,
-            type: 'expense',
-            payment_method: method,
-            account_id: accId,
-            notes: document.getElementById('payModalDesc').textContent,
-          })
+          .insert({ user_id:currentUser.id, date, amount:_pendingPayAmount, type:'expense',
+            payment_method: document.getElementById('payMethod').value,
+            account_id:accId, notes:document.getElementById('payModalDesc').textContent })
           .select('id').single();
-        if (txnErr) { showToast('建立交易失敗', 'error'); return; }
+        if (txnErr) { showToast('建立交易失敗','error'); return; }
         txnId = txn.id;
       }
-
-      // 標記期數為已繳
       const { error } = await db
         .from('personal_installment_payments')
-        .update({ status: 'paid', paid_date: date, transaction_id: txnId })
+        .update({ status:'paid', paid_date:date, transaction_id:txnId })
         .eq('id', _pendingPaymentId);
-      if (error) { showToast('標記失敗', 'error'); return; }
-
-      // 取得這期的 installment_id，再檢查是否全部繳完
+      if (error) { showToast('標記失敗','error'); return; }
       const { data: thisPay } = await db
-        .from('personal_installment_payments')
-        .select('installment_id')
-        .eq('id', _pendingPaymentId)
-        .single();
-
+        .from('personal_installment_payments').select('installment_id').eq('id',_pendingPaymentId).single();
       if (thisPay) {
         const { data: siblings } = await db
-          .from('personal_installment_payments')
-          .select('status')
-          .eq('installment_id', thisPay.installment_id);
-        if (siblings && siblings.every(p => p.status === 'paid')) {
-          await db.from('personal_installments')
-            .update({ status: 'completed' })
-            .eq('id', thisPay.installment_id);
-        }
+          .from('personal_installment_payments').select('status').eq('installment_id',thisPay.installment_id);
+        if (siblings && siblings.every(p => p.status==='paid'))
+          await db.from('personal_installments').update({status:'completed'}).eq('id',thisPay.installment_id);
       }
-
-      showToast('已標記繳款完成 ✓', 'success');
+      showToast('已標記繳款完成 ✓','success');
       closePayModal();
       await loadAccounts();
-      if (currentTab === 'txn') loadTransactions();
+      if (currentTab==='txn') loadTransactions();
       loadInstallments();
     }
 
     // ======= 固定支出 =======
-    let _pendingRecurPaymentId  = null;
-    let _pendingRecurAccountId  = null;
-    let _pendingRecurDueDate    = null;
-
-    function updateRecurAccountOptions() {
-      ['recurAccount', 'recurConfirmAccount'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">— 請選擇 —</option>';
-        accounts.forEach(a => {
-          const opt = document.createElement('option');
-          opt.value = a.id;
-          opt.textContent = `${a.type === 'bank' ? '🏦' : '💵'} ${a.name}`;
-          if (a.id === cur) opt.selected = true;
-          sel.appendChild(opt);
-        });
-      });
-    }
-
     function openRecurModal() {
-      document.getElementById('recurName').value    = '';
-      document.getElementById('recurDay').value     = '';
-      document.getElementById('recurNotes').value   = '';
+      document.getElementById('recurName').value  = '';
+      document.getElementById('recurDay').value   = '';
+      document.getElementById('recurNotes').value = '';
       updateRecurAccountOptions();
       document.getElementById('recurModal').style.display = 'flex';
     }
     function closeRecurModal() { document.getElementById('recurModal').style.display = 'none'; }
 
     async function saveRecurring() {
-      const name   = document.getElementById('recurName').value.trim();
-      const day    = parseInt(document.getElementById('recurDay').value);
-      const method = document.getElementById('recurMethod').value;
-      const accId  = document.getElementById('recurAccount').value || null;
-      const notes  = document.getElementById('recurNotes').value.trim() || null;
-
-      if (!name || !day || day < 1 || day > 28) {
-        showToast('請填寫名稱與正確的繳款日（1–28）', 'error'); return;
-      }
-
+      const name  = document.getElementById('recurName').value.trim();
+      const day   = parseInt(document.getElementById('recurDay').value);
+      const method= document.getElementById('recurMethod').value;
+      const accId = document.getElementById('recurAccount').value || null;
+      const notes = document.getElementById('recurNotes').value.trim() || null;
+      if (!name||!day||day<1||day>28) { showToast('請填寫名稱與正確的繳款日（1–28）','error'); return; }
       const { data: recur, error } = await db
         .from('personal_recurring_expenses')
-        .insert({ user_id: currentUser.id, name, day_of_month: day,
-          account_id: accId, payment_method: method, notes })
+        .insert({ user_id:currentUser.id, name, day_of_month:day, account_id:accId, payment_method:method, notes })
         .select().single();
-      if (error) { showToast('建立失敗', 'error'); return; }
-
-      // 產生當月起未來 12 個月的繳款紀錄
+      if (error) { showToast('建立失敗','error'); return; }
       const now = new Date();
-      const rows = Array.from({ length: 12 }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const ym = `${y}-${m}`;
-        // 若當月繳款日已過，仍建立（讓用戶手動確認）
-        const dueDate = `${y}-${m}-${String(day).padStart(2, '0')}`;
-        return { recurring_id: recur.id, user_id: currentUser.id, ym, due_date: dueDate };
+      const rows = Array.from({length:12},(_,i) => {
+        const d   = new Date(now.getFullYear(), now.getMonth()+i, 1);
+        const y   = d.getFullYear();
+        const mm  = String(d.getMonth()+1).padStart(2,'0');
+        const ym  = `${y}-${mm}`;
+        const due = `${y}-${mm}-${String(day).padStart(2,'0')}`;
+        return { recurring_id:recur.id, user_id:currentUser.id, ym, due_date:due };
       });
-
       const { error: rowErr } = await db.from('personal_recurring_payments').insert(rows);
-      if (rowErr) { showToast('產生月份紀錄失敗', 'error'); return; }
-
-      showToast(`「${name}」已建立，12 個月紀錄已產生 ✓`, 'success');
+      if (rowErr) { showToast('產生月份紀錄失敗','error'); return; }
+      showToast(`「${name}」已建立，12 個月紀錄已產生 ✓`,'success');
       closeRecurModal();
       loadRecurring();
     }
@@ -1376,46 +1428,39 @@
     async function loadRecurring() {
       const el = document.getElementById('recurList');
       el.innerHTML = '<div class="loading" style="min-height:80px;"><div class="spinner"></div></div>';
-
       const { data: recurs } = await db
         .from('personal_recurring_expenses')
         .select('*, personal_accounts(name), personal_recurring_payments(*)')
-        .eq('user_id', currentUser.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: true });
-
+        .eq('user_id', currentUser.id).eq('is_active',true)
+        .order('created_at', { ascending:true });
       const list = recurs || [];
       if (list.length === 0) {
         el.innerHTML = '<div class="empty-state"><div class="empty-emoji">📅</div><p>還沒有固定支出，點「＋ 新增固定支出」建立</p></div>';
         return;
       }
-
       el.innerHTML = list.map(r => {
-        const payments = (r.personal_recurring_payments || [])
-          .sort((a, b) => a.ym.localeCompare(b.ym));
-        const accName  = r.personal_accounts?.name || '未指定帳戶';
-        const pendingCount = payments.filter(p => p.status === 'pending').length;
-
+        const payments     = (r.personal_recurring_payments||[]).sort((a,b)=>a.ym.localeCompare(b.ym));
+        const accName      = r.personal_accounts?.name || '未指定帳戶';
+        const pendingCount = payments.filter(p=>p.status==='pending').length;
         const rowsHtml = payments.map(p => {
-          const [y, m] = p.ym.split('-');
-          const ymLabel  = `${y}/${m}`;
-          const dayLabel = `${parseInt(m)}/${r.day_of_month}`;
+          const [y,mm] = p.ym.split('-');
+          const ymLabel  = `${y}/${mm}`;
+          const dayLabel = `${parseInt(mm)}/${r.day_of_month}`;
           if (p.status === 'confirmed') {
             return `<div class="recur-row">
               <div class="recur-ym">${ymLabel}</div>
               <div class="recur-due">${dayLabel}</div>
-              <div class="recur-amount">${p.amount != null ? formatMoney(p.amount) : '—'}</div>
+              <div class="recur-amount">${p.amount!=null?formatMoney(p.amount):'—'}</div>
               <span class="confirmed-badge">✓ 已繳</span>
             </div>`;
           }
-          // 判斷是否逾期（繳款日已過）
           const isOverdue = new Date(p.due_date) < new Date(today());
           return `<div class="recur-row">
             <div class="recur-ym" style="${isOverdue?'color:var(--danger);':''}">${ymLabel}</div>
             <div class="recur-due" style="${isOverdue?'color:var(--danger);':''}">${dayLabel}</div>
             <div class="recur-amount" style="color:var(--text-light);">待確認</div>
             <span class="pending-recur-badge"${isOverdue?' style="background:#FF6B6B20;color:var(--danger);border-color:#FF6B6B40;"':''}>
-              ${isOverdue ? '⚠️ 逾期' : '待繳'}
+              ${isOverdue?'⚠️ 逾期':'待繳'}
             </span>
             <button class="confirm-btn"
               onclick="openRecurConfirmModal('${p.id}','${r.account_id||''}','${p.due_date}','${r.name} ${ymLabel}月')">
@@ -1423,15 +1468,13 @@
             </button>
           </div>`;
         }).join('');
-
         return `
           <div class="recurring-card">
             <div class="recurring-header">
               <div class="recurring-name">🔁 ${r.name}</div>
               <div style="display:flex;gap:0.4rem;align-items:center;">
-                ${pendingCount > 0 ? `<span class="pending-recur-badge">${pendingCount} 筆待確認</span>` : '<span class="confirmed-badge">全部已繳</span>'}
-                <button onclick="deleteRecurring('${r.id}')"
-                  style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;">🗑</button>
+                ${pendingCount>0?`<span class="pending-recur-badge">${pendingCount} 筆待確認</span>`:'<span class="confirmed-badge">全部已繳</span>'}
+                <button onclick="deleteRecurring('${r.id}')" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;">🗑</button>
               </div>
             </div>
             <div class="recurring-meta">每月 ${r.day_of_month} 號・${r.payment_method}・扣款：${accName}</div>
@@ -1445,8 +1488,8 @@
       _pendingRecurAccountId = defaultAccId;
       _pendingRecurDueDate   = dueDate;
       document.getElementById('recurConfirmDesc').textContent = desc;
-      document.getElementById('recurConfirmAmount').value = '';
-      document.getElementById('recurConfirmDate').value   = dueDate <= today() ? today() : dueDate;
+      document.getElementById('recurConfirmAmount').value    = '';
+      document.getElementById('recurConfirmDate').value      = dueDate <= today() ? today() : dueDate;
       updateRecurAccountOptions();
       if (defaultAccId) document.getElementById('recurConfirmAccount').value = defaultAccId;
       document.getElementById('recurConfirmModal').style.display = 'flex';
@@ -1457,53 +1500,44 @@
     }
 
     async function confirmRecurPayment() {
-      const amount  = Number(document.getElementById('recurConfirmAmount').value);
-      const date    = document.getElementById('recurConfirmDate').value;
-      const accId   = document.getElementById('recurConfirmAccount').value || null;
-      const desc    = document.getElementById('recurConfirmDesc').textContent;
-      if (!amount)  { showToast('請填寫實際繳款金額', 'error'); return; }
-      if (!date)    { showToast('請填寫繳款日期', 'error'); return; }
-
-      // 取得此筆紀錄的 payment_method
+      const amount = Number(document.getElementById('recurConfirmAmount').value);
+      const date   = document.getElementById('recurConfirmDate').value;
+      const accId  = document.getElementById('recurConfirmAccount').value || null;
+      const desc   = document.getElementById('recurConfirmDesc').textContent;
+      if (!amount) { showToast('請填寫實際繳款金額','error'); return; }
+      if (!date)   { showToast('請填寫繳款日期','error'); return; }
       const { data: payRec } = await db
-        .from('personal_recurring_payments')
-        .select('recurring_id')
-        .eq('id', _pendingRecurPaymentId).single();
+        .from('personal_recurring_payments').select('recurring_id').eq('id',_pendingRecurPaymentId).single();
       const { data: recurRec } = payRec
-        ? await db.from('personal_recurring_expenses').select('payment_method').eq('id', payRec.recurring_id).single()
+        ? await db.from('personal_recurring_expenses').select('payment_method').eq('id',payRec.recurring_id).single()
         : { data: null };
       const method = recurRec?.payment_method || '轉帳';
-
-      // 建立支出交易
       let txnId = null;
       if (accId) {
         const { data: txn, error: txnErr } = await db
           .from('personal_transactions')
-          .insert({ user_id: currentUser.id, date, amount, type: 'expense',
-            payment_method: method, account_id: accId, notes: desc })
+          .insert({ user_id:currentUser.id, date, amount, type:'expense',
+            payment_method:method, account_id:accId, notes:desc })
           .select('id').single();
-        if (txnErr) { showToast('建立交易失敗', 'error'); return; }
+        if (txnErr) { showToast('建立交易失敗','error'); return; }
         txnId = txn.id;
       }
-
-      // 標記已確認
       const { error } = await db
         .from('personal_recurring_payments')
-        .update({ status: 'confirmed', amount, confirmed_date: date, transaction_id: txnId })
-        .eq('id', _pendingRecurPaymentId);
-      if (error) { showToast('確認失敗', 'error'); return; }
-
-      showToast(`已記錄繳款 ${formatMoney(amount)} ✓`, 'success');
+        .update({ status:'confirmed', amount, confirmed_date:date, transaction_id:txnId })
+        .eq('id',_pendingRecurPaymentId);
+      if (error) { showToast('確認失敗','error'); return; }
+      showToast(`已記錄繳款 ${formatMoney(amount)} ✓`,'success');
       closeRecurConfirmModal();
       await loadAccounts();
-      if (currentTab === 'txn') loadTransactions();
+      if (currentTab==='txn') loadTransactions();
       loadRecurring();
     }
 
     async function deleteRecurring(id) {
-      if (!confirm('確定刪除此固定支出？（所有月份紀錄也會一起刪除）')) return;
-      const { error } = await db.from('personal_recurring_expenses').delete().eq('id', id);
-      if (error) { showToast('刪除失敗', 'error'); return; }
+      if (!confirm('確定刪除此固定支出？（所有月份紀錄也會刪除）')) return;
+      const { error } = await db.from('personal_recurring_expenses').delete().eq('id',id);
+      if (error) { showToast('刪除失敗','error'); return; }
       showToast('已刪除 ✓');
       loadRecurring();
     }
