@@ -314,27 +314,53 @@
       document.getElementById('pageSubtitle').style.color = member.color;
       updateYMDisplay();
       updateCCYMDisplay();
-      await loadAccounts();
-      loadTransactions();
+      // 帳戶、所有交易、本月明細 三個查詢同時並行
+      loadAllData();
     }
 
-    async function loadAccounts() {
-      const { data } = await db
-        .from('personal_accounts')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('display_order');
-      accounts = data || [];
+    // 所有交易快取（供帳戶餘額 + 明細共用，不重複查詢）
+    let _allTxns = null;
 
-      // 計算每個帳戶餘額
-      const { data: txns } = await db
-        .from('personal_transactions')
-        .select('account_id, type, amount')
-        .eq('user_id', currentUser.id);
+    async function loadAllData() {
+      const start = monthStart(currentYM);
+      const end   = monthEnd(currentYM);
+
+      const [accRes, allTxnRes, monthTxnRes] = await Promise.all([
+        db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
+        db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
+        db.from('personal_transactions').select('*, personal_accounts(name)')
+          .eq('user_id', currentUser.id).gte('date', start).lte('date', end)
+          .order('date', { ascending: false }).order('created_at', { ascending: false }),
+      ]);
+
+      accounts = accRes.data || [];
+      _allTxns = allTxnRes.data || [];
 
       const balMap = {};
       accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
-      (txns || []).forEach(t => {
+      _allTxns.forEach(t => {
+        if (balMap[t.account_id] === undefined) return;
+        balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+      });
+
+      renderAccounts(balMap);
+      updateAccountFilter();
+      updateAccountOptions();
+      renderTxns(monthTxnRes.data || []);
+    }
+
+    async function loadAccounts() {
+      // 重新載入帳戶（新增/刪除後呼叫）
+      const [accRes, allTxnRes] = await Promise.all([
+        db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
+        db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
+      ]);
+      accounts = accRes.data || [];
+      _allTxns = allTxnRes.data || [];
+
+      const balMap = {};
+      accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
+      _allTxns.forEach(t => {
         if (balMap[t.account_id] === undefined) return;
         balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
       });
