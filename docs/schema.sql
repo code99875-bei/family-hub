@@ -104,6 +104,38 @@ CREATE TABLE IF NOT EXISTS personal_transactions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 8. 分期付款計畫
+CREATE TABLE IF NOT EXISTS personal_installments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  total_amount NUMERIC NOT NULL,
+  installment_amount NUMERIC NOT NULL,
+  total_periods INT NOT NULL,
+  start_ym TEXT NOT NULL,           -- YYYY-MM，起始月份
+  account_id UUID REFERENCES personal_accounts(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'active',     -- active / completed
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. 每期付款紀錄（建立分期計畫時自動產生）
+CREATE TABLE IF NOT EXISTS personal_installment_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  installment_id UUID REFERENCES personal_installments(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  period_index INT NOT NULL,        -- 第幾期（0-based）
+  ym TEXT NOT NULL,                 -- YYYY-MM
+  amount NUMERIC NOT NULL,
+  status TEXT DEFAULT 'pending',    -- pending / paid
+  paid_date DATE,
+  transaction_id UUID REFERENCES personal_transactions(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- personal_transactions 新增帳戶轉移欄位
+ALTER TABLE personal_transactions
+  ADD COLUMN IF NOT EXISTS transfer_group_id UUID;
+
 -- ============================================================
 -- updated_at 自動更新 trigger
 -- ============================================================
@@ -171,11 +203,17 @@ CREATE POLICY "family_expenses_update" ON family_expenses
 CREATE POLICY "family_expenses_delete" ON family_expenses
   FOR DELETE TO authenticated USING (true);
 
--- personal_accounts / personal_transactions: 僅自己可見
+-- personal_accounts / personal_transactions / installments: 僅自己可見
 CREATE POLICY "personal_accounts_own" ON personal_accounts
   FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "personal_transactions_own" ON personal_transactions
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "installments_own" ON personal_installments
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "installment_payments_own" ON personal_installment_payments
   FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
@@ -188,6 +226,8 @@ GRANT ALL ON family_income TO anon, authenticated;
 GRANT ALL ON family_expenses TO anon, authenticated;
 GRANT ALL ON personal_accounts TO anon, authenticated;
 GRANT ALL ON personal_transactions TO anon, authenticated;
+GRANT ALL ON personal_installments TO anon, authenticated;
+GRANT ALL ON personal_installment_payments TO anon, authenticated;
 
 -- 通知 PostgREST 重新載入 schema
 NOTIFY pgrst, 'reload schema';
