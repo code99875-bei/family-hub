@@ -258,12 +258,10 @@
       '日用品':'#6AAB5E','娛樂':'#F4A7B9','孝親費':'#FAAD14','其他':'#AAAAAA'
     };
 
-    let currentYM = currentYM_fn();
+    let currentYM = getNowYM();
     let currentTab = 'expense';
     let addType = 'expense';
     let currentProfile = null;
-
-    function currentYM_fn() { return new Date().toISOString().slice(0, 7); }
 
     async function init() {
       const auth = await requireAuth();

@@ -124,6 +124,6 @@ function monthEnd(ym) {
 }
 
 // 現在是 YYYY-MM
-function currentYM() {
+function getNowYM() {
   return new Date().toISOString().slice(0, 7);
 }
