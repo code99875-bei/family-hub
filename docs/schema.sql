@@ -136,6 +136,33 @@ CREATE TABLE IF NOT EXISTS personal_installment_payments (
 ALTER TABLE personal_transactions
   ADD COLUMN IF NOT EXISTS transfer_group_id UUID;
 
+-- 10. 固定支出設定（每月固定繳款，如信用卡帳單）
+CREATE TABLE IF NOT EXISTS personal_recurring_expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  day_of_month INT NOT NULL,        -- 每月幾號繳（1–28）
+  account_id UUID REFERENCES personal_accounts(id) ON DELETE SET NULL,
+  payment_method TEXT DEFAULT '轉帳',
+  notes TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 11. 固定支出月份紀錄（建立時自動產生 12 個月）
+CREATE TABLE IF NOT EXISTS personal_recurring_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recurring_id UUID REFERENCES personal_recurring_expenses(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  ym TEXT NOT NULL,                 -- YYYY-MM
+  due_date DATE NOT NULL,
+  amount NUMERIC,                   -- 實際繳款金額（確認時填入）
+  status TEXT DEFAULT 'pending',    -- pending / confirmed
+  confirmed_date DATE,
+  transaction_id UUID REFERENCES personal_transactions(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================
 -- updated_at 自動更新 trigger
 -- ============================================================
@@ -228,6 +255,8 @@ GRANT ALL ON personal_accounts TO anon, authenticated;
 GRANT ALL ON personal_transactions TO anon, authenticated;
 GRANT ALL ON personal_installments TO anon, authenticated;
 GRANT ALL ON personal_installment_payments TO anon, authenticated;
+GRANT ALL ON personal_recurring_expenses TO anon, authenticated;
+GRANT ALL ON personal_recurring_payments TO anon, authenticated;
 
 -- 通知 PostgREST 重新載入 schema
 NOTIFY pgrst, 'reload schema';

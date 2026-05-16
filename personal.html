@@ -204,6 +204,61 @@
       background: #7B5EA7;
       flex-shrink: 0;
     }
+
+    /* 固定支出 */
+    .recurring-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      margin-bottom: 0.8rem;
+    }
+    .recurring-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .recurring-name { font-size: 0.95rem; font-weight: 700; }
+    .recurring-meta { font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.6rem; }
+    .recur-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.83rem;
+    }
+    .recur-row:last-child { border-bottom: none; }
+    .recur-ym { width: 50px; color: var(--text-light); font-size: 0.75rem; }
+    .recur-due { width: 36px; color: var(--text-light); font-size: 0.75rem; }
+    .recur-amount { flex: 1; font-weight: 500; }
+    .confirmed-badge {
+      font-size: 0.68rem;
+      background: #6AAB5E20;
+      color: #3A8030;
+      border: 1px solid #6AAB5E40;
+      border-radius: 8px;
+      padding: 2px 7px;
+    }
+    .pending-recur-badge {
+      font-size: 0.68rem;
+      background: #E8943A20;
+      color: #B56A10;
+      border: 1px solid #E8943A40;
+      border-radius: 8px;
+      padding: 2px 7px;
+    }
+    .confirm-btn {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 8px;
+      background: #E8943A;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .confirm-btn:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
@@ -244,6 +299,7 @@
       <button class="tab-btn active" id="ptab-txn" onclick="switchTab('txn')">收支明細</button>
       <button class="tab-btn" id="ptab-cc" onclick="switchTab('cc')">信用卡對帳</button>
       <button class="tab-btn" id="ptab-inst" onclick="switchTab('inst')">分期付款</button>
+      <button class="tab-btn" id="ptab-recur" onclick="switchTab('recur')">固定支出</button>
     </div>
 
     <!-- 收支明細 -->
@@ -281,6 +337,16 @@
           <div style="font-size:1.8rem;">💳</div>
         </div>
         <div id="ccList"></div>
+      </div>
+    </div>
+
+    <!-- 固定支出 -->
+    <div id="ppanel-recur" style="display:none;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem;">
+        <button class="btn btn-primary btn-sm" onclick="openRecurModal()">＋ 新增固定支出</button>
+      </div>
+      <div id="recurList">
+        <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -492,6 +558,76 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closePayModal()">取消</button>
         <button class="btn btn-primary" onclick="confirmPay()">確認已繳</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 新增固定支出 Modal ====== -->
+  <div id="recurModal" class="modal-overlay" style="display:none;" onclick="closeRecurModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-title">新增固定支出</div>
+      <div class="form-group">
+        <label class="form-label">名稱 <span class="req">*</span></label>
+        <input class="form-control" id="recurName" placeholder="例：富邦信用卡繳款">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">每月幾號繳 <span class="req">*</span></label>
+          <input class="form-control" id="recurDay" type="number" min="1" max="28" placeholder="1~28">
+        </div>
+        <div class="form-group">
+          <label class="form-label">付款方式</label>
+          <select class="form-control form-select" id="recurMethod">
+            <option value="轉帳">🔄 轉帳</option>
+            <option value="現金">💵 現金</option>
+            <option value="信用卡刷卡">💳 信用卡刷卡</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">扣款帳戶</label>
+        <select class="form-control form-select" id="recurAccount">
+          <option value="">— 請選擇 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備註</label>
+        <input class="form-control" id="recurNotes" placeholder="選填">
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:0.8rem;">
+        💡 金額每月不同，確認繳款時再填入實際金額
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRecurModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveRecurring()">建立</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 確認繳款 Modal ====== -->
+  <div id="recurConfirmModal" class="modal-overlay" style="display:none;" onclick="closeRecurConfirmModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-title">✅ 確認繳款</div>
+      <div id="recurConfirmDesc" style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;"></div>
+      <div class="form-group">
+        <label class="form-label">實際繳款金額 <span class="req">*</span></label>
+        <input class="form-control" id="recurConfirmAmount" type="number" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">繳款日期 <span class="req">*</span></label>
+        <input class="form-control" id="recurConfirmDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">扣款帳戶</label>
+        <select class="form-control form-select" id="recurConfirmAccount">
+          <option value="">— 請選擇 —</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRecurConfirmModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmRecurPayment()">確認已繳</button>
       </div>
     </div>
   </div>
@@ -861,12 +997,13 @@
 
     function switchTab(tab) {
       currentTab = tab;
-      ['txn','cc','inst'].forEach(t => {
+      ['txn','cc','inst','recur'].forEach(t => {
         document.getElementById(`ptab-${t}`).classList.toggle('active', t === tab);
         document.getElementById(`ppanel-${t}`).style.display = t === tab ? '' : 'none';
       });
-      if (tab === 'cc') loadCCData();
-      if (tab === 'inst') loadInstallments();
+      if (tab === 'cc')    loadCCData();
+      if (tab === 'inst')  loadInstallments();
+      if (tab === 'recur') loadRecurring();
     }
 
     function changeMonth(delta) {
@@ -1166,6 +1303,209 @@
       await loadAccounts();
       if (currentTab === 'txn') loadTransactions();
       loadInstallments();
+    }
+
+    // ======= 固定支出 =======
+    let _pendingRecurPaymentId  = null;
+    let _pendingRecurAccountId  = null;
+    let _pendingRecurDueDate    = null;
+
+    function updateRecurAccountOptions() {
+      ['recurAccount', 'recurConfirmAccount'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— 請選擇 —</option>';
+        accounts.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = `${a.type === 'bank' ? '🏦' : '💵'} ${a.name}`;
+          if (a.id === cur) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    function openRecurModal() {
+      document.getElementById('recurName').value    = '';
+      document.getElementById('recurDay').value     = '';
+      document.getElementById('recurNotes').value   = '';
+      updateRecurAccountOptions();
+      document.getElementById('recurModal').style.display = 'flex';
+    }
+    function closeRecurModal() { document.getElementById('recurModal').style.display = 'none'; }
+
+    async function saveRecurring() {
+      const name   = document.getElementById('recurName').value.trim();
+      const day    = parseInt(document.getElementById('recurDay').value);
+      const method = document.getElementById('recurMethod').value;
+      const accId  = document.getElementById('recurAccount').value || null;
+      const notes  = document.getElementById('recurNotes').value.trim() || null;
+
+      if (!name || !day || day < 1 || day > 28) {
+        showToast('請填寫名稱與正確的繳款日（1–28）', 'error'); return;
+      }
+
+      const { data: recur, error } = await db
+        .from('personal_recurring_expenses')
+        .insert({ user_id: currentUser.id, name, day_of_month: day,
+          account_id: accId, payment_method: method, notes })
+        .select().single();
+      if (error) { showToast('建立失敗', 'error'); return; }
+
+      // 產生當月起未來 12 個月的繳款紀錄
+      const now = new Date();
+      const rows = Array.from({ length: 12 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const ym = `${y}-${m}`;
+        // 若當月繳款日已過，仍建立（讓用戶手動確認）
+        const dueDate = `${y}-${m}-${String(day).padStart(2, '0')}`;
+        return { recurring_id: recur.id, user_id: currentUser.id, ym, due_date: dueDate };
+      });
+
+      const { error: rowErr } = await db.from('personal_recurring_payments').insert(rows);
+      if (rowErr) { showToast('產生月份紀錄失敗', 'error'); return; }
+
+      showToast(`「${name}」已建立，12 個月紀錄已產生 ✓`, 'success');
+      closeRecurModal();
+      loadRecurring();
+    }
+
+    async function loadRecurring() {
+      const el = document.getElementById('recurList');
+      el.innerHTML = '<div class="loading" style="min-height:80px;"><div class="spinner"></div></div>';
+
+      const { data: recurs } = await db
+        .from('personal_recurring_expenses')
+        .select('*, personal_accounts(name), personal_recurring_payments(*)')
+        .eq('user_id', currentUser.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
+
+      const list = recurs || [];
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-emoji">📅</div><p>還沒有固定支出，點「＋ 新增固定支出」建立</p></div>';
+        return;
+      }
+
+      el.innerHTML = list.map(r => {
+        const payments = (r.personal_recurring_payments || [])
+          .sort((a, b) => a.ym.localeCompare(b.ym));
+        const accName  = r.personal_accounts?.name || '未指定帳戶';
+        const pendingCount = payments.filter(p => p.status === 'pending').length;
+
+        const rowsHtml = payments.map(p => {
+          const [y, m] = p.ym.split('-');
+          const ymLabel  = `${y}/${m}`;
+          const dayLabel = `${parseInt(m)}/${r.day_of_month}`;
+          if (p.status === 'confirmed') {
+            return `<div class="recur-row">
+              <div class="recur-ym">${ymLabel}</div>
+              <div class="recur-due">${dayLabel}</div>
+              <div class="recur-amount">${p.amount != null ? formatMoney(p.amount) : '—'}</div>
+              <span class="confirmed-badge">✓ 已繳</span>
+            </div>`;
+          }
+          // 判斷是否逾期（繳款日已過）
+          const isOverdue = new Date(p.due_date) < new Date(today());
+          return `<div class="recur-row">
+            <div class="recur-ym" style="${isOverdue?'color:var(--danger);':''}">${ymLabel}</div>
+            <div class="recur-due" style="${isOverdue?'color:var(--danger);':''}">${dayLabel}</div>
+            <div class="recur-amount" style="color:var(--text-light);">待確認</div>
+            <span class="pending-recur-badge"${isOverdue?' style="background:#FF6B6B20;color:var(--danger);border-color:#FF6B6B40;"':''}>
+              ${isOverdue ? '⚠️ 逾期' : '待繳'}
+            </span>
+            <button class="confirm-btn"
+              onclick="openRecurConfirmModal('${p.id}','${r.account_id||''}','${p.due_date}','${r.name} ${ymLabel}月')">
+              確認繳款
+            </button>
+          </div>`;
+        }).join('');
+
+        return `
+          <div class="recurring-card">
+            <div class="recurring-header">
+              <div class="recurring-name">🔁 ${r.name}</div>
+              <div style="display:flex;gap:0.4rem;align-items:center;">
+                ${pendingCount > 0 ? `<span class="pending-recur-badge">${pendingCount} 筆待確認</span>` : '<span class="confirmed-badge">全部已繳</span>'}
+                <button onclick="deleteRecurring('${r.id}')"
+                  style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;">🗑</button>
+              </div>
+            </div>
+            <div class="recurring-meta">每月 ${r.day_of_month} 號・${r.payment_method}・扣款：${accName}</div>
+            <div>${rowsHtml}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function openRecurConfirmModal(paymentId, defaultAccId, dueDate, desc) {
+      _pendingRecurPaymentId = paymentId;
+      _pendingRecurAccountId = defaultAccId;
+      _pendingRecurDueDate   = dueDate;
+      document.getElementById('recurConfirmDesc').textContent = desc;
+      document.getElementById('recurConfirmAmount').value = '';
+      document.getElementById('recurConfirmDate').value   = dueDate <= today() ? today() : dueDate;
+      updateRecurAccountOptions();
+      if (defaultAccId) document.getElementById('recurConfirmAccount').value = defaultAccId;
+      document.getElementById('recurConfirmModal').style.display = 'flex';
+    }
+    function closeRecurConfirmModal() {
+      document.getElementById('recurConfirmModal').style.display = 'none';
+      _pendingRecurPaymentId = null;
+    }
+
+    async function confirmRecurPayment() {
+      const amount  = Number(document.getElementById('recurConfirmAmount').value);
+      const date    = document.getElementById('recurConfirmDate').value;
+      const accId   = document.getElementById('recurConfirmAccount').value || null;
+      const desc    = document.getElementById('recurConfirmDesc').textContent;
+      if (!amount)  { showToast('請填寫實際繳款金額', 'error'); return; }
+      if (!date)    { showToast('請填寫繳款日期', 'error'); return; }
+
+      // 取得此筆紀錄的 payment_method
+      const { data: payRec } = await db
+        .from('personal_recurring_payments')
+        .select('recurring_id')
+        .eq('id', _pendingRecurPaymentId).single();
+      const { data: recurRec } = payRec
+        ? await db.from('personal_recurring_expenses').select('payment_method').eq('id', payRec.recurring_id).single()
+        : { data: null };
+      const method = recurRec?.payment_method || '轉帳';
+
+      // 建立支出交易
+      let txnId = null;
+      if (accId) {
+        const { data: txn, error: txnErr } = await db
+          .from('personal_transactions')
+          .insert({ user_id: currentUser.id, date, amount, type: 'expense',
+            payment_method: method, account_id: accId, notes: desc })
+          .select('id').single();
+        if (txnErr) { showToast('建立交易失敗', 'error'); return; }
+        txnId = txn.id;
+      }
+
+      // 標記已確認
+      const { error } = await db
+        .from('personal_recurring_payments')
+        .update({ status: 'confirmed', amount, confirmed_date: date, transaction_id: txnId })
+        .eq('id', _pendingRecurPaymentId);
+      if (error) { showToast('確認失敗', 'error'); return; }
+
+      showToast(`已記錄繳款 ${formatMoney(amount)} ✓`, 'success');
+      closeRecurConfirmModal();
+      await loadAccounts();
+      if (currentTab === 'txn') loadTransactions();
+      loadRecurring();
+    }
+
+    async function deleteRecurring(id) {
+      if (!confirm('確定刪除此固定支出？（所有月份紀錄也會一起刪除）')) return;
+      const { error } = await db.from('personal_recurring_expenses').delete().eq('id', id);
+      if (error) { showToast('刪除失敗', 'error'); return; }
+      showToast('已刪除 ✓');
+      loadRecurring();
     }
 
     init();
