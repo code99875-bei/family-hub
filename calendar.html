@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Hub — 行事曆</title>
+  <link rel="stylesheet" href="src/css/main.css">
+  <style>
+    /* 月份標題列 */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.8rem 1.2rem 0.4rem;
+    }
+    .cal-ym {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .cal-nav-btns { display: flex; gap: 0.5rem; }
+
+    /* 星期標題 */
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      padding: 0 0.8rem;
+      margin-bottom: 2px;
+    }
+    .cal-weekdays span {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-light);
+      padding: 0.3rem 0;
+    }
+    .cal-weekdays span:first-child { color: var(--danger); }
+    .cal-weekdays span:last-child { color: var(--color-bei); }
+
+    /* 月曆格 */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      padding: 0 0.8rem;
+    }
+
+    .cal-cell {
+      min-height: 56px;
+      padding: 4px 3px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cal-cell:hover { background: rgba(0,0,0,0.04); }
+    .cal-cell.other-month { opacity: 0.3; pointer-events: none; }
+
+    .cal-day-num {
+      font-size: 0.82rem;
+      font-weight: 500;
+      width: 26px; height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cal-cell.today .cal-day-num {
+      background: var(--color-bei);
+      color: white;
+      font-weight: 700;
+    }
+    .cal-cell.sunday .cal-day-num { color: var(--danger); }
+    .cal-cell.saturday .cal-day-num { color: var(--color-bei); }
+
+    .cal-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      justify-content: center;
+      margin-top: 2px;
+      min-height: 10px;
+    }
+
+    /* 截圖模式 */
+    body.screenshot-mode .page-header,
+    body.screenshot-mode .bottom-nav,
+    body.screenshot-mode .fab,
+    body.screenshot-mode .screenshot-btn-wrap,
+    body.screenshot-mode #dayPanel { display: none !important; }
+    body.screenshot-mode .cal-header { padding-top: 1rem; }
+
+    /* 當日事件面板 */
+    #dayPanel {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      min-height: 120px;
+    }
+    .day-panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .day-event-card {
+      border-left: 4px solid;
+      background: var(--bg);
+      border-radius: 0 8px 8px 0;
+      padding: 0.55rem 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+    .day-event-title { font-size: 0.9rem; font-weight: 600; }
+    .day-event-meta { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+    .day-event-members { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+
+    /* 新增事件 modal */
+    .recurrence-options { display: none; margin-top: 0.8rem; }
+    .recurrence-options.show { display: block; }
+    .weekday-checks {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .wd-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: white;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .wd-btn.selected {
+      background: var(--color-bei);
+      border-color: var(--color-bei);
+      color: white;
+    }
+
+    /* 衝突 modal */
+    .conflict-modal .modal-box {
+      text-align: center;
+    }
+    .conflict-emoji { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- 頁首 -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">家庭行事曆</div>
+    </div>
+    <div class="screenshot-btn-wrap">
+      <button class="btn btn-ghost btn-sm" onclick="toggleScreenshot()">📷 截圖模式</button>
+    </div>
+  </div>
+
+  <!-- 月份切換 -->
+  <div class="cal-header">
+    <div class="month-switcher">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <span class="cal-ym" id="calYM"></span>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="goToToday()">今天</button>
+  </div>
+
+  <!-- 星期標題 -->
+  <div class="cal-weekdays">
+    <span>日</span><span>一</span><span>二</span><span>三</span>
+    <span>四</span><span>五</span><span>六</span>
+  </div>
+
+  <!-- 月曆格 -->
+  <div class="cal-grid" id="calGrid"></div>
+
+  <!-- 成員圖例 -->
+  <div style="display:flex;gap:0.6rem;flex-wrap:wrap;padding:0.6rem 1.2rem;align-items:center;">
+    <span style="font-size:0.7rem;color:var(--text-light);">成員：</span>
+  </div>
+
+  <!-- 當日事件面板 -->
+  <div id="dayPanel" style="display:none;"></div>
+
+  <!-- 底部導覽 -->
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="nav-icon">🏠</span>首頁</a>
+    <a href="calendar.html" class="active"><span class="nav-icon">📅</span>行事曆</a>
+    <a href="kakeibo.html"><span class="nav-icon">💰</span>家計簿</a>
+    <a href="personal.html"><span class="nav-icon">👤</span>個人</a>
+  </nav>
+
+  <!-- FAB 新增事件 -->
+  <button class="fab" onclick="openAddModal()">＋</button>
+
+  <!-- ====== 新增事件 Modal ====== -->
+  <div id="addModal" class="modal-overlay" style="display:none;" onclick="closeAddModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modalTitle">新增行程</div>
+
+      <div class="form-group">
+        <label class="form-label">事件標題 <span class="req">*</span></label>
+        <input class="form-control" id="evTitle" placeholder="例：AZ 牙醫回診">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">所屬成員 <span class="req">*</span></label>
+        <div class="member-checkbox-group" id="memberCheckGroup"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">日期 <span class="req">*</span></label>
+        <input class="form-control" id="evDate" type="date">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">開始時間 <span class="req">*</span></label>
+          <input class="form-control" id="evStart" type="time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">結束時間 <span class="req">*</span></label>
+          <input class="form-control" id="evEnd" type="time">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">預計出門時間</label>
+          <input class="form-control" id="evDepart" type="time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">預計回家時間</label>
+          <input class="form-control" id="evReturn" type="time">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">重複</label>
+        <select class="form-control form-select" id="evRecurrence" onchange="onRecurrenceChange()">
+          <option value="none">不重複</option>
+          <option value="daily">每天</option>
+          <option value="weekly">每週</option>
+          <option value="monthly">每月（同一日）</option>
+        </select>
+        <div class="recurrence-options" id="weekdayOpts">
+          <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.4rem;">選擇星期幾</div>
+          <div class="weekday-checks" id="weekdayChecks"></div>
+        </div>
+        <div class="recurrence-options" id="recEndOpts">
+          <label class="form-label" style="margin-top:0.6rem;">重複至</label>
+          <input class="form-control" id="evRecEnd" type="date">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">備註</label>
+        <input class="form-control" id="evNotes" placeholder="選填">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddModal()">取消</button>
+        <button class="btn btn-primary" id="saveEvBtn" onclick="saveEvent()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 衝突警示 Modal ====== -->
+  <div id="conflictModal" class="modal-overlay center conflict-modal" style="display:none;">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="conflict-emoji">⚠️</div>
+      <h2 style="margin-bottom:0.5rem;">行程衝突提醒</h2>
+      <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1.5rem;">
+        這天你們都有行程，<br>請確認爺爺阿嬤是否可以幫忙！
+      </p>
+      <div style="display:flex;gap:0.7rem;">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeConflictModal()">再想想</button>
+        <button class="btn btn-primary" style="flex:1" onclick="confirmSaveEvent()">還是儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 刪除確認 Modal ====== -->
+  <div id="deleteModal" class="modal-overlay center" style="display:none;">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <h2 style="margin-bottom:0.5rem;">刪除行程</h2>
+      <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1.5rem;" id="deleteModalDesc"></p>
+      <div style="display:flex;gap:0.7rem;">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" style="flex:1" onclick="doDelete()">刪除</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="src/js/config.js"></script>
+  <script src="src/js/members.js"></script>
+  <script src="src/js/auth.js"></script>
+  <script>
+    const WEEKDAYS_SHORT = ['日','一','二','三','四','五','六'];
+    const WEEKDAYS_FULL  = ['週日','週一','週二','週三','週四','週五','週六'];
+
+    let currentYMD = new Date();
+    let selectedDate = null;
+    let allEvents = [];
+    let editingEventId = null;
+    let pendingSavePayload = null;
+    let deleteTargetId = null;
+    let screenshotMode = false;
+
+    async function init() {
+      await requireAuth();
+      buildMemberLegend();
+      buildMemberCheckboxes();
+      buildWeekdayCheckboxes();
+      document.getElementById('evDate').value = today();
+      renderCalendar();
+    }
+
+    function buildMemberLegend() {
+      const wrap = document.querySelector('.cal-weekdays + div > span:last-child') || document.querySelector('[style*="成員"]');
+      const container = document.querySelector('[style*="gap:0.6rem"]');
+      if (!container) return;
+      MEMBER_LIST.forEach(m => {
+        container.insertAdjacentHTML('beforeend',
+          `<span style="display:flex;align-items:center;gap:3px;font-size:0.72rem;">
+            ${memberDot(m.id, 8)}<span style="color:var(--text-light)">${m.name}</span>
+          </span>`);
+      });
+    }
+
+    function buildMemberCheckboxes() {
+      const wrap = document.getElementById('memberCheckGroup');
+      MEMBER_LIST.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'member-check-btn';
+        btn.dataset.id = m.id;
+        btn.style.borderColor = m.color;
+        btn.innerHTML = `${m.emoji} ${m.name}`;
+        btn.onclick = () => {
+          btn.classList.toggle('selected');
+          if (btn.classList.contains('selected')) btn.style.background = m.color;
+          else { btn.style.background = '#F5F5F5'; }
+        };
+        wrap.appendChild(btn);
+      });
+    }
+
+    function buildWeekdayCheckboxes() {
+      const wrap = document.getElementById('weekdayChecks');
+      WEEKDAYS_SHORT.forEach((wd, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wd-btn';
+        btn.dataset.day = i;
+        btn.textContent = wd;
+        btn.onclick = () => btn.classList.toggle('selected');
+        wrap.appendChild(btn);
+      });
+    }
+
+    function changeMonth(delta) {
+      currentYMD = new Date(currentYMD.getFullYear(), currentYMD.getMonth() + delta, 1);
+      renderCalendar();
+    }
+
+    function goToToday() {
+      currentYMD = new Date();
+      renderCalendar();
+      selectedDate = today();
+      showDayPanel(today());
+    }
+
+    async function renderCalendar() {
+      const y = currentYMD.getFullYear();
+      const m = currentYMD.getMonth();
+      document.getElementById('calYM').textContent = `${y} 年 ${m + 1} 月`;
+
+      // 取當月事件
+      const start = `${y}-${String(m+1).padStart(2,'0')}-01`;
+      const end   = new Date(y, m+1, 0).toISOString().slice(0, 10);
+
+      const { data } = await db
+        .from('calendar_events')
+        .select('*')
+        .or(`date.gte.${start},recurrence_end.gte.${start}`)
+        .eq('is_cancelled', false)
+        .order('start_time');
+      allEvents = data || [];
+
+      // 建立日期→成員點點 map
+      const dotMap = {}; // date → Set of member IDs
+      allEvents.forEach(ev => {
+        const dates = getEventDates(ev, start, end);
+        dates.forEach(d => {
+          if (!dotMap[d]) dotMap[d] = new Set();
+          (ev.members || []).forEach(id => dotMap[d].add(id));
+        });
+      });
+
+      const grid = document.getElementById('calGrid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(y, m, 1).getDay();
+      const daysInMonth = new Date(y, m+1, 0).getDate();
+      const todayStr = today();
+
+      // 前置空格（上月）
+      for (let i = 0; i < firstDay; i++) {
+        grid.insertAdjacentHTML('beforeend', '<div class="cal-cell other-month"></div>');
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = new Date(y, m, d).getDay();
+        const isToday = dateStr === todayStr;
+        const isSun = dow === 0, isSat = dow === 6;
+
+        const dots = [...(dotMap[dateStr] || [])].map(id => memberDot(id, 7)).join('');
+
+        const cell = document.createElement('div');
+        cell.className = `cal-cell${isToday?' today':''}${isSun?' sunday':''}${isSat?' saturday':''}`;
+        cell.innerHTML = `<div class="cal-day-num">${d}</div><div class="cal-dots">${dots}</div>`;
+        cell.onclick = () => { selectedDate = dateStr; showDayPanel(dateStr); };
+        grid.appendChild(cell);
+      }
+
+      if (selectedDate) showDayPanel(selectedDate);
+    }
+
+    function getEventDates(ev, start, end) {
+      if (!ev.recurrence_type || ev.recurrence_type === 'none') {
+        return (ev.date >= start && ev.date <= end) ? [ev.date] : [];
+      }
+      const dates = [];
+      const recEnd = ev.recurrence_end && ev.recurrence_end < end ? ev.recurrence_end : end;
+      let cur = new Date(Math.max(new Date(ev.date + 'T00:00:00'), new Date(start + 'T00:00:00')));
+      const endD = new Date(recEnd + 'T00:00:00');
+      while (cur <= endD) {
+        const ds = cur.toISOString().slice(0, 10);
+        const dow = cur.getDay(), dom = cur.getDate();
+        let include = false;
+        if (ev.recurrence_type === 'daily') include = true;
+        else if (ev.recurrence_type === 'weekly') include = (ev.recurrence_days || []).includes(dow);
+        else if (ev.recurrence_type === 'monthly') include = dom === (ev.recurrence_day_of_month || new Date(ev.date + 'T00:00:00').getDate());
+        if (include) dates.push(ds);
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
+    }
+
+    function showDayPanel(dateStr) {
+      const panel = document.getElementById('dayPanel');
+      panel.style.display = 'block';
+
+      const d = new Date(dateStr + 'T00:00:00');
+      const title = `${d.getMonth()+1}月${d.getDate()}日（${WEEKDAYS_FULL[d.getDay()]}）`;
+
+      const dayEvents = allEvents.filter(ev => getEventDates(ev, dateStr, dateStr).length > 0);
+
+      let html = `<div class="day-panel-title">📌 ${title}</div>`;
+
+      if (dayEvents.length === 0) {
+        html += `<div class="empty-state" style="padding:1rem 0;">
+          <div class="empty-emoji">🌤</div><p>這天沒有行程</p></div>`;
+      } else {
+        dayEvents.forEach(ev => {
+          const firstColor = ev.members?.[0] ? getMember(ev.members[0]).color : '#CCC';
+          const timeStr = ev.start_time ? ev.start_time.slice(0,5) + '～' + (ev.end_time||'').slice(0,5) : '全天';
+          const memberBadges = (ev.members||[]).map(memberBadge).join(' ');
+          html += `
+            <div class="day-event-card" style="border-color:${firstColor};">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
+                <div>
+                  <div class="day-event-title">${ev.title}</div>
+                  <div class="day-event-meta">${timeStr}${ev.depart_time ? ' ・出門 '+ev.depart_time.slice(0,5):''}</div>
+                  ${ev.notes ? `<div class="day-event-meta" style="margin-top:2px;">📝 ${ev.notes}</div>` : ''}
+                  <div class="day-event-members" style="margin-top:5px;">${memberBadges}</div>
+                </div>
+                <button style="background:none;border:none;color:var(--text-light);font-size:1.1rem;cursor:pointer;flex-shrink:0;"
+                  onclick="confirmDelete('${ev.id}','${ev.title.replace(/'/g,'\\\'')}')" title="刪除">🗑</button>
+              </div>
+            </div>`;
+        });
+      }
+
+      html += `<button class="btn btn-ghost btn-sm btn-block" style="margin-top:0.5rem;"
+        onclick="openAddModal('${dateStr}')">＋ 新增這天的行程</button>`;
+
+      panel.innerHTML = html;
+    }
+
+    // ======= 新增事件 =======
+    function openAddModal(dateStr) {
+      editingEventId = null;
+      document.getElementById('modalTitle').textContent = '新增行程';
+      document.getElementById('evTitle').value = '';
+      document.getElementById('evDate').value = dateStr || today();
+      document.getElementById('evStart').value = '';
+      document.getElementById('evEnd').value = '';
+      document.getElementById('evDepart').value = '';
+      document.getElementById('evReturn').value = '';
+      document.getElementById('evNotes').value = '';
+      document.getElementById('evRecurrence').value = 'none';
+      document.getElementById('evRecEnd').value = '';
+      onRecurrenceChange();
+      // 清除成員選取
+      document.querySelectorAll('.member-check-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        btn.style.background = '#F5F5F5';
+      });
+      // 清除星期選取
+      document.querySelectorAll('.wd-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('saveEvBtn').textContent = '儲存';
+      document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+
+    function onRecurrenceChange() {
+      const val = document.getElementById('evRecurrence').value;
+      document.getElementById('weekdayOpts').classList.toggle('show', val === 'weekly');
+      document.getElementById('recEndOpts').classList.toggle('show', val !== 'none');
+    }
+
+    async function saveEvent() {
+      const title = document.getElementById('evTitle').value.trim();
+      const date  = document.getElementById('evDate').value;
+      const members = [...document.querySelectorAll('.member-check-btn.selected')].map(b => b.dataset.id);
+
+      if (!title) { showToast('請輸入事件標題', 'error'); return; }
+      if (!date)  { showToast('請選擇日期', 'error'); return; }
+      if (members.length === 0) { showToast('請選擇至少一位成員', 'error'); return; }
+
+      const recurrence_type = document.getElementById('evRecurrence').value;
+      const recurrence_days = recurrence_type === 'weekly'
+        ? [...document.querySelectorAll('.wd-btn.selected')].map(b => Number(b.dataset.day))
+        : null;
+      const recurrence_day_of_month = recurrence_type === 'monthly'
+        ? new Date(date + 'T00:00:00').getDate() : null;
+      const recurrence_end = document.getElementById('evRecEnd').value || null;
+
+      const payload = {
+        title,
+        date,
+        start_time: document.getElementById('evStart').value || null,
+        end_time:   document.getElementById('evEnd').value || null,
+        depart_time: document.getElementById('evDepart').value || null,
+        return_time: document.getElementById('evReturn').value || null,
+        notes: document.getElementById('evNotes').value.trim() || null,
+        members,
+        recurrence_type,
+        recurrence_days,
+        recurrence_day_of_month,
+        recurrence_end,
+      };
+
+      // 衝突檢查：同一天貝與群都有行程
+      const hasBei = members.includes('bei');
+      const hasQun = members.includes('qun');
+      if (hasBei || hasQun) {
+        const { data: conflict } = await db
+          .from('calendar_events')
+          .select('members')
+          .eq('date', date)
+          .eq('is_cancelled', false);
+        const existingMembers = new Set((conflict||[]).flatMap(e => e.members||[]));
+        const wouldConflict = (hasBei && existingMembers.has('qun')) ||
+                              (hasQun && existingMembers.has('bei'));
+        if (wouldConflict) {
+          pendingSavePayload = payload;
+          document.getElementById('addModal').style.display = 'none';
+          document.getElementById('conflictModal').style.display = 'flex';
+          return;
+        }
+      }
+
+      await doSaveEvent(payload);
+    }
+
+    async function confirmSaveEvent() {
+      closeConflictModal();
+      if (pendingSavePayload) {
+        await doSaveEvent(pendingSavePayload);
+        pendingSavePayload = null;
+      }
+    }
+
+    async function doSaveEvent(payload) {
+      const user = await getUser();
+      const data = { ...payload, created_by: user.id };
+
+      let error;
+      if (editingEventId) {
+        ({ error } = await db.from('calendar_events').update(data).eq('id', editingEventId));
+      } else {
+        ({ error } = await db.from('calendar_events').insert(data));
+      }
+
+      if (error) { showToast('儲存失敗：' + error.message, 'error'); return; }
+      showToast('行程已儲存 ✓', 'success');
+      closeAddModal();
+      await renderCalendar();
+      if (payload.date) showDayPanel(payload.date);
+    }
+
+    function closeConflictModal() { document.getElementById('conflictModal').style.display = 'none'; }
+
+    // ======= 刪除 =======
+    function confirmDelete(id, title) {
+      deleteTargetId = id;
+      document.getElementById('deleteModalDesc').textContent = `確定要刪除「${title}」嗎？`;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      deleteTargetId = null;
+    }
+
+    async function doDelete() {
+      if (!deleteTargetId) return;
+      const { error } = await db.from('calendar_events').delete().eq('id', deleteTargetId);
+      if (error) { showToast('刪除失敗', 'error'); return; }
+      showToast('已刪除 ✓');
+      closeDeleteModal();
+      await renderCalendar();
+      if (selectedDate) showDayPanel(selectedDate);
+    }
+
+    // ======= 截圖模式 =======
+    function toggleScreenshot() {
+      screenshotMode = !screenshotMode;
+      document.body.classList.toggle('screenshot-mode', screenshotMode);
+    }
+
+    init();
+  </script>
+</body>
+</html>

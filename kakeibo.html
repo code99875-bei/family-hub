@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Hub — 家計簿</title>
+  <link rel="stylesheet" href="src/css/main.css">
+  <style>
+    .summary-row {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+    .summary-item {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 0.7rem 0.9rem;
+    }
+    .summary-item label {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      font-weight: 700;
+    }
+    .summary-item .val {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* 圖表 */
+    .chart-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+    }
+    .chart-bar-label {
+      font-size: 0.75rem;
+      min-width: 52px;
+      color: var(--text-light);
+      flex-shrink: 0;
+    }
+    .chart-bar-track {
+      flex: 1;
+      height: 10px;
+      background: #F0EDE8;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .chart-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: var(--color-bei);
+      transition: width 0.4s ease;
+    }
+    .chart-bar-amount {
+      font-size: 0.72rem;
+      font-weight: 600;
+      min-width: 52px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* 收支列表項目顏色 */
+    .income-row { border-left: 3px solid var(--income-color); }
+    .expense-row { border-left: 3px solid var(--expense-color); }
+
+    .cat-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頁首 -->
+  <div class="page-header">
+    <div class="page-title">家計簿</div>
+    <div class="month-switcher">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <span id="ymDisplay"></span>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- 本月總覽卡 -->
+    <div class="card">
+      <div class="card-title">本月總覽</div>
+      <div class="summary-row">
+        <div class="summary-item">
+          <label>收入</label>
+          <div class="val amount-income" id="totalIncome">—</div>
+        </div>
+        <div class="summary-item">
+          <label>支出</label>
+          <div class="val amount-expense" id="totalExpense">—</div>
+        </div>
+        <div class="summary-item">
+          <label>結餘</label>
+          <div class="val" id="totalBalance">—</div>
+        </div>
+      </div>
+      <div id="noQunAlert" class="no-payment-alert" style="display:none;font-size:0.78rem;color:var(--text-light);font-style:italic;">
+        💤 本月未收到群的撥款
+      </div>
+    </div>
+
+    <!-- Tab 切換 -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-expense" onclick="switchTab('expense')">支出明細</button>
+      <button class="tab-btn" id="tab-income" onclick="switchTab('income')">收入明細</button>
+      <button class="tab-btn" id="tab-chart" onclick="switchTab('chart')">類別圖表</button>
+    </div>
+
+    <!-- 支出明細 -->
+    <div id="panel-expense">
+      <div class="card">
+        <div id="expenseList">
+          <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 收入明細 -->
+    <div id="panel-income" style="display:none;">
+      <div class="card">
+        <div id="incomeList">
+          <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 類別圖表 -->
+    <div id="panel-chart" style="display:none;">
+      <div class="card">
+        <div class="card-title">支出類別</div>
+        <div id="chartArea"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部導覽 -->
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="nav-icon">🏠</span>首頁</a>
+    <a href="calendar.html"><span class="nav-icon">📅</span>行事曆</a>
+    <a href="kakeibo.html" class="active"><span class="nav-icon">💰</span>家計簿</a>
+    <a href="personal.html"><span class="nav-icon">👤</span>個人</a>
+  </nav>
+
+  <!-- FAB 新增 -->
+  <button class="fab" onclick="openAddModal('expense')" title="新增支出">＋</button>
+
+  <!-- ====== 新增收支 Modal ====== -->
+  <div id="addModal" class="modal-overlay" style="display:none;" onclick="closeAddModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+
+      <!-- 收入/支出切換 -->
+      <div class="tab-bar" style="margin-bottom:1.2rem;">
+        <button class="tab-btn" id="add-tab-expense" onclick="setAddType('expense')">記支出</button>
+        <button class="tab-btn" id="add-tab-income" onclick="setAddType('income')">記收入</button>
+      </div>
+
+      <!-- 支出欄位 -->
+      <div id="expenseFields">
+        <div class="form-group">
+          <label class="form-label">日期 <span class="req">*</span></label>
+          <input class="form-control" id="exDate" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">金額 <span class="req">*</span></label>
+          <input class="form-control" id="exAmount" type="number" placeholder="0" min="0">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">類別 <span class="req">*</span></label>
+            <select class="form-control form-select" id="exCategory">
+              <option value="飲食">🍱 飲食</option>
+              <option value="交通">🚌 交通</option>
+              <option value="醫療">💊 醫療</option>
+              <option value="教育">📚 教育</option>
+              <option value="日用品">🧹 日用品</option>
+              <option value="娛樂">🎮 娛樂</option>
+              <option value="孝親費">❤️ 孝親費</option>
+              <option value="其他">📦 其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">付款方式 <span class="req">*</span></label>
+            <select class="form-control form-select" id="exPayment">
+              <option value="現金">💵 現金</option>
+              <option value="轉帳">🔄 轉帳</option>
+              <option value="刷卡">💳 刷卡</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <input class="form-control" id="exNotes" placeholder="選填">
+        </div>
+        <div class="form-group">
+          <label class="form-label">登記人</label>
+          <input class="form-control" id="exRecorder" readonly style="background:#F8F8F8;">
+        </div>
+      </div>
+
+      <!-- 收入欄位 -->
+      <div id="incomeFields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">日期 <span class="req">*</span></label>
+          <input class="form-control" id="inDate" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">金額 <span class="req">*</span></label>
+          <input class="form-control" id="inAmount" type="number" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">來源</label>
+          <select class="form-control form-select" id="inSource">
+            <option value="群的撥款">群的撥款</option>
+            <option value="貝的固定撥款">貝的固定撥款</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <input class="form-control" id="inNotes" placeholder="選填">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveRecord()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="src/js/config.js"></script>
+  <script src="src/js/members.js"></script>
+  <script src="src/js/auth.js"></script>
+  <script>
+    const CAT_EMOJI = {
+      '飲食':'🍱','交通':'🚌','醫療':'💊','教育':'📚',
+      '日用品':'🧹','娛樂':'🎮','孝親費':'❤️','其他':'📦'
+    };
+    const CAT_COLOR = {
+      '飲食':'#FF8C42','交通':'#5BB8E8','醫療':'#FF6B6B','教育':'#7B5EA7',
+      '日用品':'#6AAB5E','娛樂':'#F4A7B9','孝親費':'#FAAD14','其他':'#AAAAAA'
+    };
+
+    let currentYM = currentYM_fn();
+    let currentTab = 'expense';
+    let addType = 'expense';
+    let currentProfile = null;
+
+    function currentYM_fn() { return new Date().toISOString().slice(0, 7); }
+
+    async function init() {
+      const auth = await requireAuth();
+      if (!auth) return;
+      currentProfile = auth.profile;
+      document.getElementById('exRecorder').value = getMember(currentProfile.member_id).name;
+      updateYMDisplay();
+      loadData();
+    }
+
+    function updateYMDisplay() {
+      const [y, m] = currentYM.split('-');
+      document.getElementById('ymDisplay').textContent = `${y}/${m}`;
+    }
+
+    function changeMonth(delta) {
+      const [y, m] = currentYM.split('-').map(Number);
+      const d = new Date(y, m - 1 + delta, 1);
+      currentYM = d.toISOString().slice(0, 7);
+      updateYMDisplay();
+      loadData();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      ['expense','income','chart'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+        document.getElementById(`panel-${t}`).style.display = t === tab ? '' : 'none';
+      });
+    }
+
+    async function loadData() {
+      const start = monthStart(currentYM);
+      const end   = monthEnd(currentYM);
+
+      // 自動補貝的固定撥款
+      const { data: existing } = await db
+        .from('family_income')
+        .select('id')
+        .eq('auto_generated', true)
+        .gte('date', start)
+        .lte('date', end)
+        .single();
+      if (!existing) {
+        await db.from('family_income').insert({
+          date: start, amount: 3000,
+          source: '貝的固定撥款', auto_generated: true,
+        });
+      }
+
+      const [incRes, expRes] = await Promise.all([
+        db.from('family_income').select('*').gte('date', start).lte('date', end).order('date', { ascending: false }),
+        db.from('family_expenses').select('*').gte('date', start).lte('date', end).order('date', { ascending: false }),
+      ]);
+
+      const incomes  = incRes.data || [];
+      const expenses = expRes.data || [];
+      const totalIn  = incomes.reduce((s, r) => s + Number(r.amount), 0);
+      const totalEx  = expenses.reduce((s, r) => s + Number(r.amount), 0);
+      const balance  = totalIn - totalEx;
+
+      document.getElementById('totalIncome').textContent  = formatMoney(totalIn);
+      document.getElementById('totalExpense').textContent = formatMoney(totalEx);
+      const balEl = document.getElementById('totalBalance');
+      balEl.textContent = formatMoney(balance);
+      balEl.className = 'val ' + (balance >= 0 ? 'amount-income' : 'amount-expense');
+
+      // 先生未撥款提示
+      const now = new Date();
+      const lastDay = new Date(monthEnd(currentYM));
+      const isCurrentOrPast = now >= lastDay;
+      const hasQun = incomes.some(r => r.source === '群的撥款');
+      document.getElementById('noQunAlert').style.display = (isCurrentOrPast && !hasQun) ? 'block' : 'none';
+
+      renderExpenses(expenses);
+      renderIncomes(incomes);
+      renderChart(expenses);
+    }
+
+    function renderExpenses(list) {
+      const el = document.getElementById('expenseList');
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-emoji">🌿</div><p>這個月還沒有支出紀錄</p></div>';
+        return;
+      }
+      el.innerHTML = list.map(r => `
+        <div class="list-item expense-row" style="padding-left:0.8rem;">
+          <div class="cat-icon" style="background:${CAT_COLOR[r.category] || '#EEE'}20;">
+            ${CAT_EMOJI[r.category] || '📦'}
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">${r.category}${r.notes ? ' · ' + r.notes : ''}</div>
+            <div class="list-item-sub">${fmtDate(r.date)} ・${r.payment_method} ・${r.recorded_by}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div class="list-item-amount amount-expense">${formatMoney(r.amount)}</div>
+            <button onclick="deleteRecord('expense','${r.id}')"
+              style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:0;">🗑</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function renderIncomes(list) {
+      const el = document.getElementById('incomeList');
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-emoji">🌿</div><p>這個月還沒有收入紀錄</p></div>';
+        return;
+      }
+      el.innerHTML = list.map(r => `
+        <div class="list-item income-row" style="padding-left:0.8rem;">
+          <div class="cat-icon" style="background:#52C41A20;">💰</div>
+          <div class="list-item-content">
+            <div class="list-item-title">${r.source}${r.notes ? ' · ' + r.notes : ''}</div>
+            <div class="list-item-sub">${fmtDate(r.date)}${r.auto_generated ? ' ・自動產生' : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div class="list-item-amount amount-income">${formatMoney(r.amount)}</div>
+            ${r.auto_generated ? '' : `<button onclick="deleteRecord('income','${r.id}')"
+              style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:0;">🗑</button>`}
+          </div>
+        </div>`).join('');
+    }
+
+    function renderChart(expenses) {
+      const catMap = {};
+      expenses.forEach(r => {
+        catMap[r.category] = (catMap[r.category] || 0) + Number(r.amount);
+      });
+      const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+      const max = sorted[0]?.[1] || 1;
+
+      const el = document.getElementById('chartArea');
+      if (sorted.length === 0) {
+        el.innerHTML = '<div class="empty-state" style="padding:1rem 0;"><div class="empty-emoji">📊</div><p>尚無支出資料</p></div>';
+        return;
+      }
+      el.innerHTML = sorted.map(([cat, amt]) => `
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">${CAT_EMOJI[cat]||'📦'} ${cat}</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="width:${Math.round(amt/max*100)}%;background:${CAT_COLOR[cat]||'var(--color-bei)'}"></div>
+          </div>
+          <div class="chart-bar-amount">${formatMoney(amt)}</div>
+        </div>`).join('');
+    }
+
+    // ======= 新增 =======
+    function openAddModal(type) {
+      setAddType(type || 'expense');
+      document.getElementById('exDate').value = today();
+      document.getElementById('exAmount').value = '';
+      document.getElementById('exNotes').value = '';
+      document.getElementById('inDate').value = today();
+      document.getElementById('inAmount').value = '';
+      document.getElementById('inNotes').value = '';
+      document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function setAddType(type) {
+      addType = type;
+      document.getElementById('add-tab-expense').classList.toggle('active', type === 'expense');
+      document.getElementById('add-tab-income').classList.toggle('active', type === 'income');
+      document.getElementById('expenseFields').style.display = type === 'expense' ? '' : 'none';
+      document.getElementById('incomeFields').style.display  = type === 'income'  ? '' : 'none';
+    }
+
+    function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+
+    async function saveRecord() {
+      const user = await getUser();
+      if (addType === 'expense') {
+        const amount = Number(document.getElementById('exAmount').value);
+        const date   = document.getElementById('exDate').value;
+        if (!date || !amount) { showToast('請填寫日期與金額', 'error'); return; }
+        const { error } = await db.from('family_expenses').insert({
+          date, amount,
+          category: document.getElementById('exCategory').value,
+          payment_method: document.getElementById('exPayment').value,
+          notes: document.getElementById('exNotes').value.trim() || null,
+          recorded_by: getMember(currentProfile.member_id).name,
+          created_by: user.id,
+        });
+        if (error) { showToast('儲存失敗', 'error'); return; }
+      } else {
+        const amount = Number(document.getElementById('inAmount').value);
+        const date   = document.getElementById('inDate').value;
+        if (!date || !amount) { showToast('請填寫日期與金額', 'error'); return; }
+        const { error } = await db.from('family_income').insert({
+          date, amount,
+          source: document.getElementById('inSource').value,
+          notes: document.getElementById('inNotes').value.trim() || null,
+          auto_generated: false,
+          created_by: user.id,
+        });
+        if (error) { showToast('儲存失敗', 'error'); return; }
+      }
+      showToast('已儲存 ✓', 'success');
+      closeAddModal();
+      loadData();
+    }
+
+    async function deleteRecord(type, id) {
+      if (!confirm('確定刪除這筆紀錄？')) return;
+      const table = type === 'expense' ? 'family_expenses' : 'family_income';
+      const { error } = await db.from(table).delete().eq('id', id);
+      if (error) { showToast('刪除失敗', 'error'); return; }
+      showToast('已刪除 ✓');
+      loadData();
+    }
+
+    init();
+  </script>
+</body>
+</html>

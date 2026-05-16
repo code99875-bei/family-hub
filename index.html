@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Hub — 首頁</title>
+  <link rel="stylesheet" href="src/css/main.css">
+  <style>
+    .greeting {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .greeting-sub {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    .balance-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      margin: 0.4rem 0 0.2rem;
+    }
+    .balance-label {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-bottom: 0.2rem;
+    }
+    .week-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-light);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0 0 0.5rem;
+    }
+    .event-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .event-row:last-child { border-bottom: none; }
+    .event-date-box {
+      min-width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .event-date-day {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .event-date-wd {
+      font-size: 0.65rem;
+      color: var(--text-light);
+    }
+    .event-info { flex: 1; min-width: 0; }
+    .event-title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event-time {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    .event-dots {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin-top: 3px;
+    }
+    .account-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .account-row:last-child { border-bottom: none; }
+    .account-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .account-bal {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .no-payment-alert {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+    .total-personal {
+      margin-top: 0.6rem;
+      padding-top: 0.6rem;
+      border-top: 2px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-personal span:first-child {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頁首 -->
+  <div class="page-header">
+    <div>
+      <div class="greeting" id="greeting">早安！</div>
+      <div class="greeting-sub" id="greetingSub">今天也是美好的一天 ✨</div>
+    </div>
+    <div class="header-avatar" id="headerAvatar" onclick="showUserMenu()">?</div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- 家計簿結餘卡 -->
+    <div class="card">
+      <div class="card-title">本月家計簿</div>
+      <div class="balance-label">結餘</div>
+      <div class="balance-row">
+        <span class="amount-big" id="familyBalance">計算中...</span>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-light);display:flex;gap:1rem;margin-top:0.3rem;">
+        <span>收入 <strong id="totalIncome">—</strong></span>
+        <span>支出 <strong id="totalExpense">—</strong></span>
+      </div>
+      <div id="noPaymentAlert" class="no-payment-alert" style="display:none;">
+        💤 本月未收到群的撥款
+      </div>
+    </div>
+
+    <!-- 本週＋下週行程 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.7rem;">
+        <div class="card-title" style="margin-bottom:0;">本週 ＋ 下週行程</div>
+        <a href="calendar.html" style="font-size:0.75rem;color:var(--color-bei);">查看全部 →</a>
+      </div>
+      <div id="upcomingEvents">
+        <div class="loading" style="min-height:80px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- 個人財務總覽 -->
+    <div class="card" id="personalCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.7rem;">
+        <div class="card-title" style="margin-bottom:0;">我的帳戶</div>
+        <a href="personal.html" style="font-size:0.75rem;color:var(--color-bei);">管理 →</a>
+      </div>
+      <div id="personalAccounts">
+        <div class="loading" style="min-height:60px;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部導覽 -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="active"><span class="nav-icon">🏠</span>首頁</a>
+    <a href="calendar.html"><span class="nav-icon">📅</span>行事曆</a>
+    <a href="kakeibo.html"><span class="nav-icon">💰</span>家計簿</a>
+    <a href="personal.html"><span class="nav-icon">👤</span>個人</a>
+  </nav>
+
+  <!-- 用戶選單 -->
+  <div id="userMenuOverlay" style="display:none;" class="modal-overlay center" onclick="closeUserMenu()">
+    <div class="modal-box" style="max-width:260px;text-align:center;" onclick="event.stopPropagation()">
+      <div style="font-size:2rem;margin-bottom:0.5rem;" id="menuEmoji">👤</div>
+      <div style="font-weight:700;margin-bottom:1.2rem;" id="menuName">...</div>
+      <button class="btn btn-secondary btn-block" onclick="signOut()">登出</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="src/js/config.js"></script>
+  <script src="src/js/members.js"></script>
+  <script src="src/js/auth.js"></script>
+  <script>
+    const WEEKDAYS = ['日','一','二','三','四','五','六'];
+
+    async function init() {
+      const auth = await requireAuth();
+      if (!auth) return;
+      const { user, profile } = auth;
+      const member = getMember(profile.member_id);
+
+      // 頭像
+      const avatar = document.getElementById('headerAvatar');
+      avatar.textContent = member.emoji;
+      avatar.style.background = member.color;
+
+      // 問候
+      const h = new Date().getHours();
+      const greet = h < 11 ? '早安' : h < 14 ? '午安' : h < 18 ? '嗨' : '晚安';
+      document.getElementById('greeting').textContent = `${greet}，${member.name}！`;
+
+      // 設定選單
+      document.getElementById('menuEmoji').textContent = member.emoji;
+      document.getElementById('menuName').textContent = member.name;
+
+      loadFamilyBalance();
+      loadUpcomingEvents();
+      loadPersonalAccounts(user.id);
+    }
+
+    async function loadFamilyBalance() {
+      const ym = currentYM();
+      const start = monthStart(ym);
+      const end = monthEnd(ym);
+
+      // 自動產生本月貝的固定撥款（如果不存在）
+      const { data: existingBei } = await db
+        .from('family_income')
+        .select('id')
+        .eq('auto_generated', true)
+        .gte('date', start)
+        .lte('date', end)
+        .single();
+      if (!existingBei) {
+        await db.from('family_income').insert({
+          date: start,
+          amount: 3000,
+          source: '貝的固定撥款',
+          auto_generated: true,
+        });
+      }
+
+      const [incomeRes, expenseRes, qunRes] = await Promise.all([
+        db.from('family_income').select('amount').gte('date', start).lte('date', end),
+        db.from('family_expenses').select('amount').gte('date', start).lte('date', end),
+        db.from('family_income').select('id').eq('source', '群的撥款').gte('date', start).lte('date', end),
+      ]);
+
+      const income = (incomeRes.data || []).reduce((s, r) => s + Number(r.amount), 0);
+      const expense = (expenseRes.data || []).reduce((s, r) => s + Number(r.amount), 0);
+      const balance = income - expense;
+
+      document.getElementById('totalIncome').textContent = formatMoney(income);
+      document.getElementById('totalExpense').textContent = formatMoney(expense);
+      const balEl = document.getElementById('familyBalance');
+      balEl.textContent = formatMoney(balance);
+      balEl.className = 'amount-big ' + (balance >= 0 ? 'amount-income' : 'amount-expense');
+
+      // 先生未撥款提示（月底後5天內還沒有）
+      const now = new Date();
+      const lastDay = new Date(monthEnd(ym));
+      const daysAfterMonth = Math.floor((now - lastDay) / 86400000);
+      if (daysAfterMonth >= -2 && (!qunRes.data || qunRes.data.length === 0)) {
+        document.getElementById('noPaymentAlert').style.display = 'block';
+      }
+    }
+
+    async function loadUpcomingEvents() {
+      const now = new Date();
+      const start = now.toISOString().slice(0, 10);
+      const end2w = new Date(now.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+
+      const { data: events } = await db
+        .from('calendar_events')
+        .select('*')
+        .gte('date', start)
+        .lte('date', end2w)
+        .is('parent_event_id', null)
+        .eq('is_cancelled', false)
+        .order('date')
+        .order('start_time');
+
+      // 展開重複事件
+      const allEvents = [];
+      (events || []).forEach(ev => {
+        if (ev.recurrence_type === 'none' || !ev.recurrence_type) {
+          allEvents.push(ev);
+        } else {
+          expandRecurring(ev, start, end2w).forEach(d => allEvents.push({ ...ev, date: d }));
+        }
+      });
+      allEvents.sort((a, b) => a.date.localeCompare(b.date) || (a.start_time || '').localeCompare(b.start_time || ''));
+
+      const container = document.getElementById('upcomingEvents');
+      if (allEvents.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-emoji">🌈</div><p>兩週內沒有行程，好好休息！</p></div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      allEvents.slice(0, 8).forEach(ev => {
+        const d = new Date(ev.date + 'T00:00:00');
+        const dots = (ev.members || []).map(id => memberDot(id, 8)).join('');
+        const timeStr = ev.start_time ? ev.start_time.slice(0,5) + (ev.end_time ? '～' + ev.end_time.slice(0,5) : '') : '全天';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="event-row">
+            <div class="event-date-box">
+              <div class="event-date-day">${d.getDate()}</div>
+              <div class="event-date-wd">${WEEKDAYS[d.getDay()]}</div>
+            </div>
+            <div class="event-info">
+              <div class="event-title">${ev.title}</div>
+              <div class="event-time">${timeStr}</div>
+              <div class="event-dots">${dots}</div>
+            </div>
+          </div>`);
+      });
+    }
+
+    async function loadPersonalAccounts(userId) {
+      const { data: accounts } = await db
+        .from('personal_accounts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('display_order');
+
+      const { data: txns } = await db
+        .from('personal_transactions')
+        .select('account_id, type, amount')
+        .eq('user_id', userId);
+
+      const container = document.getElementById('personalAccounts');
+
+      if (!accounts || accounts.length === 0) {
+        container.innerHTML = '<div style="font-size:0.82rem;color:var(--text-light);padding:0.5rem 0;">尚未設定帳戶，<a href="personal.html" style="color:var(--color-bei);">前往設定 →</a></div>';
+        return;
+      }
+
+      const balMap = {};
+      accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
+      (txns || []).forEach(t => {
+        if (!balMap[t.account_id] && balMap[t.account_id] !== 0) return;
+        balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+      });
+
+      let total = 0;
+      container.innerHTML = '';
+      accounts.forEach(a => {
+        const bal = balMap[a.id] || 0;
+        total += bal;
+        const emergency = a.is_emergency ? ' 🚨' : '';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="account-row">
+            <div class="account-name">
+              <span>${a.type === 'bank' ? '🏦' : '💵'}</span>
+              ${a.name}${emergency}
+            </div>
+            <div class="account-bal" style="color:${bal>=0?'var(--text)':'var(--expense-color)'}">
+              ${formatMoney(bal)}
+            </div>
+          </div>`);
+      });
+
+      container.insertAdjacentHTML('beforeend', `
+        <div class="total-personal">
+          <span>合計</span>
+          <span class="amount-big" style="font-size:1.3rem;color:${total>=0?'var(--text)':'var(--expense-color)'}">
+            ${formatMoney(total)}
+          </span>
+        </div>`);
+    }
+
+    function expandRecurring(ev, start, end) {
+      const dates = [];
+      const endDate = ev.recurrence_end && ev.recurrence_end < end ? ev.recurrence_end : end;
+      let cur = new Date(Math.max(new Date(ev.date), new Date(start)));
+      const endD = new Date(endDate);
+
+      while (cur <= endD) {
+        const dateStr = cur.toISOString().slice(0, 10);
+        const day = cur.getDay();
+        const dom = cur.getDate();
+        let include = false;
+        if (ev.recurrence_type === 'daily') include = true;
+        else if (ev.recurrence_type === 'weekly') include = (ev.recurrence_days || []).includes(day);
+        else if (ev.recurrence_type === 'monthly') include = dom === (ev.recurrence_day_of_month || new Date(ev.date).getDate());
+        if (include && dateStr >= start) dates.push(dateStr);
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
+    }
+
+    function showUserMenu() { document.getElementById('userMenuOverlay').style.display = 'flex'; }
+    function closeUserMenu() { document.getElementById('userMenuOverlay').style.display = 'none'; }
+
+    init();
+  </script>
+</body>
+</html>
