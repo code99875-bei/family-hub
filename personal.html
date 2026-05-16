@@ -322,31 +322,39 @@
     let _allTxns = null;
 
     async function loadAllData() {
-      const start = monthStart(currentYM);
-      const end   = monthEnd(currentYM);
+      try {
+        const start = monthStart(currentYM);
+        const end   = monthEnd(currentYM);
 
-      const [accRes, allTxnRes, monthTxnRes] = await Promise.all([
-        db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
-        db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
-        db.from('personal_transactions').select('*, personal_accounts(name)')
-          .eq('user_id', currentUser.id).gte('date', start).lte('date', end)
-          .order('date', { ascending: false }).order('created_at', { ascending: false }),
-      ]);
+        const [accRes, allTxnRes, monthTxnRes] = await Promise.all([
+          db.from('personal_accounts').select('*').eq('user_id', currentUser.id).order('display_order'),
+          db.from('personal_transactions').select('account_id, type, amount').eq('user_id', currentUser.id),
+          db.from('personal_transactions').select('*, personal_accounts(name)')
+            .eq('user_id', currentUser.id).gte('date', start).lte('date', end)
+            .order('date', { ascending: false }).order('created_at', { ascending: false }),
+        ]);
 
-      accounts = accRes.data || [];
-      _allTxns = allTxnRes.data || [];
+        accounts = accRes.data || [];
+        _allTxns = allTxnRes.data || [];
 
-      const balMap = {};
-      accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
-      _allTxns.forEach(t => {
-        if (balMap[t.account_id] === undefined) return;
-        balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
-      });
+        const balMap = {};
+        accounts.forEach(a => { balMap[a.id] = Number(a.initial_balance); });
+        _allTxns.forEach(t => {
+          if (balMap[t.account_id] === undefined) return;
+          balMap[t.account_id] += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+        });
 
-      renderAccounts(balMap);
-      updateAccountFilter();
-      updateAccountOptions();
-      renderTxns(monthTxnRes.data || []);
+        renderAccounts(balMap);
+        updateAccountFilter();
+        updateAccountOptions();
+        renderTxns(monthTxnRes.data || []);
+      } catch (err) {
+        console.error('loadAllData error:', err);
+        document.getElementById('accountsGrid').innerHTML =
+          '<div class="empty-state"><div class="empty-emoji">⚠️</div><p>載入失敗，請重新整理頁面</p></div>';
+        document.getElementById('txnList').innerHTML = '';
+        document.getElementById('grandTotal').textContent = '—';
+      }
     }
 
     async function loadAccounts() {

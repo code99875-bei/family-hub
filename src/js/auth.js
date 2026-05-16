@@ -4,10 +4,9 @@ let _currentProfile = null;
 
 async function getUser() {
   if (_currentUser) return _currentUser;
-  // getSession 讀本地快取，不發網路請求，比 getUser() 快
-  const { data: { session } } = await db.auth.getSession();
-  _currentUser = session?.user ?? null;
-  return _currentUser;
+  const { data: { user } } = await db.auth.getUser();
+  _currentUser = user;
+  return user;
 }
 
 async function getProfile() {
