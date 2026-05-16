@@ -295,26 +295,24 @@
       });
     }
 
+    async function ensureAutoIncome(start, end) {
+      const { data: existing } = await db
+        .from('family_income').select('id')
+        .eq('auto_generated', true).gte('date', start).lte('date', end).single();
+      if (!existing) {
+        await db.from('family_income').insert({
+          date: start, amount: 3000, source: '貝的固定撥款', auto_generated: true,
+        });
+      }
+    }
+
     async function loadData() {
       const start = monthStart(currentYM);
       const end   = monthEnd(currentYM);
 
-      // 自動補貝的固定撥款
-      const { data: existing } = await db
-        .from('family_income')
-        .select('id')
-        .eq('auto_generated', true)
-        .gte('date', start)
-        .lte('date', end)
-        .single();
-      if (!existing) {
-        await db.from('family_income').insert({
-          date: start, amount: 3000,
-          source: '貝的固定撥款', auto_generated: true,
-        });
-      }
-
-      const [incRes, expRes] = await Promise.all([
+      // 自動撥款檢查與主要資料同時發出，不互相等待
+      const [, incRes, expRes] = await Promise.all([
+        ensureAutoIncome(start, end),
         db.from('family_income').select('*').gte('date', start).lte('date', end).order('date', { ascending: false }),
         db.from('family_expenses').select('*').gte('date', start).lte('date', end).order('date', { ascending: false }),
       ]);

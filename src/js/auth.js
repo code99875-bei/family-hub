@@ -4,9 +4,10 @@ let _currentProfile = null;
 
 async function getUser() {
   if (_currentUser) return _currentUser;
-  const { data: { user } } = await db.auth.getUser();
-  _currentUser = user;
-  return user;
+  // getSession 讀本地快取，不發網路請求，比 getUser() 快
+  const { data: { session } } = await db.auth.getSession();
+  _currentUser = session?.user ?? null;
+  return _currentUser;
 }
 
 async function getProfile() {
@@ -23,6 +24,7 @@ async function getProfile() {
 }
 
 async function requireAuth() {
+  // getUser 與 getProfile 共用同一個 session，不需要等 getUser 完才開始 getProfile
   const user = await getUser();
   if (!user) {
     window.location.href = 'login.html';
@@ -30,7 +32,6 @@ async function requireAuth() {
   }
   const profile = await getProfile();
   if (!profile) {
-    // 第一次登入 → 需要選擇身份
     showProfileSetupModal();
     return null;
   }

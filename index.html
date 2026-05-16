@@ -222,24 +222,17 @@
       const start = monthStart(ym);
       const end = monthEnd(ym);
 
-      // 自動產生本月貝的固定撥款（如果不存在）
-      const { data: existingBei } = await db
-        .from('family_income')
-        .select('id')
-        .eq('auto_generated', true)
-        .gte('date', start)
-        .lte('date', end)
-        .single();
-      if (!existingBei) {
-        await db.from('family_income').insert({
-          date: start,
-          amount: 3000,
-          source: '貝的固定撥款',
-          auto_generated: true,
+      // 自動撥款檢查與主要資料同時並行，不互相等待
+      const autoIncomeCheck = db.from('family_income').select('id')
+        .eq('auto_generated', true).gte('date', start).lte('date', end).single()
+        .then(({ data }) => {
+          if (!data) db.from('family_income').insert({
+            date: start, amount: 3000, source: '貝的固定撥款', auto_generated: true,
+          });
         });
-      }
 
-      const [incomeRes, expenseRes, qunRes] = await Promise.all([
+      const [, incomeRes, expenseRes, qunRes] = await Promise.all([
+        autoIncomeCheck,
         db.from('family_income').select('amount').gte('date', start).lte('date', end),
         db.from('family_expenses').select('amount').gte('date', start).lte('date', end),
         db.from('family_income').select('id').eq('source', '群的撥款').gte('date', start).lte('date', end),
